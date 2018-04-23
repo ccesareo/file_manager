@@ -5,8 +5,8 @@ import psycopg2.extras
 
 from file_manager.config import settings, VERSION, LOG
 from file_manager.data.base_engine import BaseEngine
-from file_manager.data.base_model import find_model
 from file_manager.data.field import Field
+from file_manager.data.models import find_model
 
 
 class PsycoPGEngine(BaseEngine):
@@ -86,10 +86,9 @@ class PsycoPGEngine(BaseEngine):
         conn = PsycoPGEngine._connect()
         try:
             cursor = conn.cursor()
-            LOG.debug(cursor.mogrify(statement))
             cursor.execute(statement)
             result = cursor.fetchall()
-            LOG.debug('Found %d records.' % len(result))
+            LOG.debug('%s - Found %d records.' % (cursor.mogrify(statement), len(result)))
             return [model(**r) for r in result]
         finally:
             conn.close()

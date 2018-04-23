@@ -5,13 +5,6 @@ import inspect
 from file_manager.data.field import Field
 
 
-def find_model(name):
-    for model in BaseModel.__subclasses__():
-        if model.NAME == name:
-            return model
-    raise Exception('No model found for "%s".' % name)
-
-
 class BaseModel(object):
     NAME = None  # Name of table
     id = Field(int)

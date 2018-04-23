@@ -65,8 +65,7 @@ class Query(object):
 
     DEFAULT_LANG = None
 
-    def __init__(self, t_name=None, t_columns=None, **filters):
-        self.__t_columns = t_columns
+    def __init__(self, table_name, **filters):
         self._where_filter_group_stack = []
 
         self._select_statement = _SelectStatement()
@@ -79,9 +78,9 @@ class Query(object):
 
         self.start_filter_group(Query.OP.AND)
 
-        if t_name:
-            self._select_statement.set_columns(t_name, t_columns)
-            self._from_statement.table = t_name
+        if table_name:
+            self._select_statement.set_columns(table_name)
+            self._from_statement.table = table_name
 
         for column, value in sorted(filters.items()):
             self.add_filter(column, value)
@@ -296,14 +295,9 @@ class _SelectStatement(object):
     def __init__(self):
         self.columns = list()
 
-    def set_columns(self, table, column_names):
+    def set_columns(self, table):
         self.columns = list()
-
-        if not column_names:
-            column_names = ['%s.*' % table]
-
-        for column_name in column_names:
-            self.columns.append((table, column_name))
+        self.columns.append((table, '%s.*' % table))
 
     def get_string(self):
         column_names = [t[1] for t in self.columns]
@@ -366,7 +360,7 @@ class FilterGroup(object):
                 rvalue = None
                 operator = Query.OP.ISNOTNULL
 
-        elif isinstance(rvalue, (list, tuple)):
+        if isinstance(rvalue, (list, tuple, set)):
             if operator == Query.OP.EQ:
                 operator = Query.OP.ISIN
             elif operator == Query.OP.NEQ:

@@ -8,7 +8,7 @@ class BaseEngine(object):
         raise NotImplementedError()
 
     @classmethod
-    def select(cls, **kwargs):
+    def select(cls, query):
         raise NotImplementedError()
 
     @classmethod
