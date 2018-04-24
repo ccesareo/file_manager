@@ -40,7 +40,7 @@ class FileManagerThumbnail(QWidget):
 
     def update_thumb_size(self):
         size = settings.thumb_size * FileManagerThumbnail.REF_WIDTH / 100.0
-        self.setFixedSize(size, size * 1.5)
+        self.setFixedSize(size, size)
         if self._pixmap is not None:
             self._thumb.setPixmap(self._pixmap.scaledToWidth(size, Qt.SmoothTransformation))
 

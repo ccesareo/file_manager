@@ -20,6 +20,10 @@ class BaseEngine(object):
         raise NotImplementedError()
 
     @classmethod
+    def update_many(cls, models):
+        raise NotImplementedError()
+
+    @classmethod
     def delete(cls, model):
         raise NotImplementedError()
 

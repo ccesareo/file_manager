@@ -27,16 +27,21 @@ class TagToAssetModel(BaseModel):
         for item in existing:
             all_pairs.remove((item.asset_id, item.tag_id))
 
-        engine = get_engine()
+        if not all_pairs:
+            return
+
+        models = list()
         for asset_id, tag_id in all_pairs:
-            engine.create(TagToAssetModel(asset_id, tag_id))
+            models.append(TagToAssetModel(asset_id, tag_id))
+
+        engine = get_engine()
+        engine.create_many(models)
 
     @classmethod
     def remove_tags(cls, asset_records, tag_records):
         existing = cls._find_existing(asset_records, tag_records)
         engine = get_engine()
-        for record in existing:
-            engine.delete(record)
+        engine.delete_many(existing)
 
     @classmethod
     def _find_existing(cls, asset_records, tag_records):
