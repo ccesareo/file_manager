@@ -1,7 +1,9 @@
-from PySide2.QtCore import Signal, Qt, QEvent
+import psycopg2
+from PySide2.QtCore import Signal, Qt, QEvent, QTimer
 from PySide2.QtGui import QKeyEvent
-from PySide2.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QLabel, QListWidget, QApplication, QComboBox
+from PySide2.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QListWidget, QApplication, QComboBox
 
+from file_manager.config import settings
 from file_manager.data.connection import get_engine
 from file_manager.data.query import Query
 
@@ -20,28 +22,33 @@ class FileManagerToolbar(QWidget):
         self._search_filter = _SearchFilter()
         self._edit_search = _SearchField(self._search_filter)
 
+        self._timer_search = QTimer()
+        self._timer_search.setSingleShot(True)
+        self._timer_search.setInterval(settings.search_timeout)
+
         self._build_ui()
         self._build_connections()
         self._setup_ui()
 
     def _build_ui(self):
-        self.setFixedHeight(35)
-
+        self.setFixedHeight(25)
         self._edit_search.setFixedWidth(400)
 
         lyt_main = QHBoxLayout()
-        lyt_main.setContentsMargins(0, 0, 10, 0)
-        lyt_main.setSpacing(0)
+        lyt_main.setContentsMargins(0, 0, 0, 0)
+        lyt_main.setSpacing(5)
         lyt_main.addStretch()
         lyt_main.addWidget(self._cmbo_search_type)
         lyt_main.addWidget(self._edit_search)
         self.setLayout(lyt_main)
 
     def _build_connections(self):
-        self._edit_search.textChanged.connect(self._update_tags)
-        self._edit_search.textChanged.connect(self._update_search_filter)
+        self._edit_search.textChanged.connect(self._timer_search.start)
         self._search_filter.item_selected.connect(self._tag_selected)
         self._cmbo_search_type.currentIndexChanged.connect(self._edit_search.clear)
+
+        self._timer_search.timeout.connect(self._update_tags)
+        self._timer_search.timeout.connect(self._update_search_filter)
 
     def _setup_ui(self):
         self._cmbo_search_type.addItems(['asset', 'tag'])
@@ -49,7 +56,11 @@ class FileManagerToolbar(QWidget):
     def _update_search_filter(self):
         self._search_filter.clear()
 
-        last_item = self._split_labels()[-1]
+        labels = self._split_labels()
+        if not labels:
+            return
+
+        last_item = labels[-1]
         if not last_item:
             self._search_filter.hide()
             return
@@ -57,7 +68,11 @@ class FileManagerToolbar(QWidget):
         q = Query(self._search_type())
         q.add_filter('name', last_item, operator=q.OP.MATCH, match_case=False)
         engine = get_engine()
-        result = engine.select(q)
+        try:
+            result = engine.select(q)
+        except psycopg2.DataError:
+            result = list()
+
         if result:
             names = [x.name for x in result]
             names.sort()
@@ -71,24 +86,6 @@ class FileManagerToolbar(QWidget):
 
     def _update_tags(self):
         items = self._split_labels()
-        if items:
-            q = Query(self._search_type())
-            q.start_filter_group(q.OP.OR)
-            for item in items:
-                q.add_filter('name', '^%s$' % item, operator=q.OP.MATCH)
-            q.end_filter_group()
-            rec_by_name = {r.name: r for r in (get_engine().select(q))}
-        else:
-            rec_by_name = dict()
-
-        _found_names = set(rec_by_name.keys())
-        if self._str_names - _found_names:
-            pass
-        elif _found_names - self._str_names:
-            pass
-        else:
-            return
-
         if self._search_type() == 'tag':
             self.tags_changed.emit(sorted(items))
         else:

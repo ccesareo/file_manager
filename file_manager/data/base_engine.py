@@ -8,6 +8,10 @@ class BaseEngine(object):
         raise NotImplementedError()
 
     @classmethod
+    def create_many(cls, models):
+        raise NotImplementedError()
+
+    @classmethod
     def select(cls, query):
         raise NotImplementedError()
 

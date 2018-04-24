@@ -44,7 +44,6 @@ class PsycoPGEngine(BaseEngine):
         """
         :type model: BaseModel
         :param model: Populated model to make an entry for
-        :rtype: list[dict[str,variant]]
         """
         assert model.id is None, 'Record [%s] already created.' % model.id
 
@@ -71,6 +70,41 @@ class PsycoPGEngine(BaseEngine):
             for k, v in new_data.items():
                 setattr(model, k, v)
             model.clear_changes()
+        finally:
+            conn.close()
+
+    @classmethod
+    def create_many(cls, models):
+        assert all(x.id is None for x in models), 'Some models already exist.'
+
+        model_name = models[0].NAME
+        columns = [field.name for field in models[0].fields() if field.name != 'id']
+
+        all_values = list()
+        for model in models:
+            _data = model.data()
+            _data['timestamp'] = datetime.datetime.now()
+            _data.pop('id', None)
+            for k, v in _data.items():
+                _data[k] = str(v) if v not in (0, None, '') else None
+            model_values = [_data[k] for k in columns]
+            all_values.extend(model_values)
+
+        _arg_string = ('%s,' * len(columns)).rstrip(',')
+        values = ['(%s)' % _arg_string] * len(models)
+        statement = "INSERT INTO %s(%s) VALUES %s RETURNING *" % (model_name, ', '.join(columns), ','.join(values))
+        conn = PsycoPGEngine._connect()
+        try:
+            cursor = conn.cursor()
+            LOG.debug(cursor.mogrify(statement, all_values))
+            cursor.execute(statement, all_values)
+            new_records = cursor.fetchall()
+
+            # Apply new data
+            for model, data in zip(models, new_records):
+                for k, v in data.items():
+                    setattr(model, k, v)
+                model.clear_changes()
         finally:
             conn.close()
 

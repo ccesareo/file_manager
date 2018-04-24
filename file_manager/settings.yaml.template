@@ -1,3 +1,5 @@
+search_timeout_ms: 300
+
 database:
   engine: 'postgresql'
   name: 'file_manager'

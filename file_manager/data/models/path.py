@@ -11,13 +11,13 @@ class PathModel(BaseModel):
     filepath = Field(str)
     type = Field(str)
 
-    def __init__(self, asset, filepath, **kwargs):
+    def __init__(self, asset_id, filepath, **kwargs):
         """
         :type asset: file_manager.data.models.asset.AssetModel
         :type filepath: str
         """
         super(PathModel, self).__init__(**kwargs)
 
-        self.asset_id = asset.id
+        self.asset_id = asset_id
         self.filepath = filepath.replace('\\', '/')
         self.type = os.path.splitext(filepath)[1].strip('.')

@@ -3,7 +3,7 @@ from collections import defaultdict
 from PySide2.QtWidgets import QDialog, QGridLayout, QComboBox, QVBoxLayout, QLabel, QListWidget
 
 from file_manager.data.connection import get_engine
-from file_manager.data.models import TagToAssetModel
+from file_manager.data.models.tag_to_asset import TagToAssetModel
 from file_manager.data.query import Query
 
 

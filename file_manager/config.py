@@ -14,6 +14,10 @@ class _Settings(object):
     def __init__(self):
         self.lib_dir = os.path.dirname(__file__)
 
+        self.thumb_size = 100  # percent
+
+        self.search_timeout = None
+
         self.db_engine = None
 
         self.db_name = None
@@ -30,6 +34,8 @@ class _Settings(object):
 
         data = yaml.load(open(settings_file))
         assert 'database' in data, 'No database settings found, please reference template.'
+
+        self.search_timeout = data.get('search_timeout_ms', 0)
 
         self.db_engine = data['database'].get('engine')
 

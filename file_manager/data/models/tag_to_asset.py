@@ -20,10 +20,10 @@ class TagToAssetModel(BaseModel):
     def apply_tags(cls, asset_records, tag_records):
         existing = cls._find_existing(asset_records, tag_records)
 
-        all_pairs = list()
+        all_pairs = set()
         for asset in asset_records:
             for tag in tag_records:
-                all_pairs.append((asset.id, tag.id))
+                all_pairs.add((asset.id, tag.id))
         for item in existing:
             all_pairs.remove((item.asset_id, item.tag_id))
 
