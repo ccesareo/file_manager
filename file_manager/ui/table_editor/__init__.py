@@ -1,8 +1,9 @@
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QTreeWidget, QVBoxLayout, QTreeWidgetItem, QApplication, QDialog, QPushButton, \
-    QHBoxLayout, QGridLayout, QLabel, QLineEdit, QSpinBox
+    QHBoxLayout, QGridLayout, QLabel, QLineEdit, QSpinBox, QMessageBox
 
 from file_manager.data.connection import get_engine
+from file_manager.data.models import AssetModel
 from file_manager.data.query import Query
 
 
@@ -26,6 +27,28 @@ class TableEditor(QDialog):
         self._setup_ui()
 
         self._populate()
+
+    def keyPressEvent(self, event):
+        super(TableEditor, self).keyPressEvent(event)
+
+        if event.key() == Qt.Key_Delete:
+            selected = self._tree.selectedItems()
+            if not selected:
+                return
+
+            res = QMessageBox.question(self, 'Delete Selected?', 'Delete %d records?' % len(selected),
+                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+
+            if res != QMessageBox.Yes:
+                return
+
+            records = set()
+            for item in selected:
+                records.add(item.data(0, Qt.UserRole))
+                i = self._tree.indexOfTopLevelItem(item)
+                self._tree.takeTopLevelItem(i)
+
+            self._model.delete(records)
 
     def _build_ui(self):
         self._tree.setRootIsDecorated(False)
@@ -54,8 +77,9 @@ class TableEditor(QDialog):
 
     def _create_record(self):
         editor = RecordCreation(self._model, parent=self)
-        editor.exec_()
-        # TODO
+        if editor.exec_():
+            new_record = editor.new_record
+            self._add_row(new_record)
 
     def _column_data_changed(self, item, column_number):
         column = self._columns[column_number]
@@ -70,14 +94,18 @@ class TableEditor(QDialog):
         engine = get_engine()
         result = engine.select(query)
         for item in result:
-            values = [getattr(item, c) for c in self._columns]
-            values = [str(v) if v not in (None, 0) else '' for v in values]
-            titem = QTreeWidgetItem(values)
-            titem.setFlags(titem.flags() | Qt.ItemIsEditable)
-            titem.setData(0, Qt.UserRole, item)
-            self._tree.addTopLevelItem(titem)
+            self._add_row(item)
+
         for i in range(self._tree.columnCount()):
             self._tree.resizeColumnToContents(i)
+
+    def _add_row(self, item):
+        values = [getattr(item, c) for c in self._columns]
+        values = [str(v) if v not in (None, 0) else '' for v in values]
+        new_item = QTreeWidgetItem(values)
+        new_item.setFlags(new_item.flags() | Qt.ItemIsEditable)
+        new_item.setData(0, Qt.UserRole, item)
+        self._tree.addTopLevelItem(new_item)
 
 
 class RecordCreation(QDialog):
@@ -85,6 +113,8 @@ class RecordCreation(QDialog):
         super(RecordCreation, self).__init__(*args, **kwargs)
 
         self._model = model
+
+        self.new_record = None
 
         self._wdg_map = dict()
 
@@ -139,8 +169,8 @@ class RecordCreation(QDialog):
                 value = wdg.text()
             data[column] = value
 
-        record = self._model(**data)
-        get_engine().create(record)
+        self.new_record = self._model(**data)
+        get_engine().create(self.new_record)
 
         self.accept()
 

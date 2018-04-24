@@ -2,6 +2,7 @@ import datetime
 import getpass
 import inspect
 
+from file_manager.data.connection import get_engine
 from file_manager.data.field import Field
 
 
@@ -21,6 +22,10 @@ class BaseModel(object):
                 fields.append(attr)
         fields.sort(key=lambda _: _.order)
         return fields
+
+    @classmethod
+    def delete(cls, records):
+        get_engine().delete_many(records)
 
     def __init__(self, **data):
         self._changes = dict()
