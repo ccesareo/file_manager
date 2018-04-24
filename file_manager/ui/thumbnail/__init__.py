@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from PySide2.QtCore import Qt, Signal
-from PySide2.QtGui import QCursor, QFont
+from PySide2.QtGui import QCursor, QFont, QPixmap
 from PySide2.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QSizePolicy
 
 from file_manager.config import settings
@@ -101,7 +101,18 @@ class FileManagerThumbnail(QWidget):
     def _show_menu(self):
         menu = AssetEditMenu([self.asset_record], parent=self)
         menu.assets_deleted.connect(self.deleted.emit)
+        menu.thumbnail_updated.connect(self._update_thumbnail)
         menu.exec_(QCursor.pos())
 
     def _setup_ui(self):
         self.update_thumb_size()
+        self._update_thumbnail()
+
+    def _update_thumbnail(self):
+        if not self.asset_record.thumbnail:
+            return
+
+        thumbs_folder = settings.thumbs_folder()
+        pix = QPixmap(os.path.join(thumbs_folder, self.asset_record.thumbnail))
+        pix = pix.scaledToWidth(self._thumb.width(), Qt.SmoothTransformation)
+        self._thumb.setPixmap(pix)

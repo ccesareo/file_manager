@@ -1,3 +1,6 @@
+import os
+
+from file_manager.config import settings
 from file_manager.data.base_model import BaseModel
 from file_manager.data.connection import get_engine
 from file_manager.data.field import Field
@@ -9,6 +12,7 @@ class AssetModel(BaseModel):
     NAME = 'asset'
 
     name = Field(str)
+    thumbnail = Field(str)
 
     @classmethod
     def delete(cls, records):
@@ -16,9 +20,16 @@ class AssetModel(BaseModel):
         engine = get_engine()
         links = engine.select(Query('tag_to_asset', asset_id=asset_ids))
         paths = engine.select(Query('path', asset_id=asset_ids))
-        for item in (links + paths + records):
+        for item in (links + paths):
             # TODO - delete multiple by table
             engine.delete(item)
+        for record in records:
+            if record.thumbnail:
+                folder = settings.thumbs_folder()
+                path = os.path.join(folder, record.thumbnail)
+                if os.path.isfile(path):
+                    os.remove(path)
+            engine.delete(record)
 
     @classmethod
     def merge(cls, asset_records, new_name):
