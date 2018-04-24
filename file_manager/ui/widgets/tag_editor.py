@@ -3,6 +3,7 @@ from collections import defaultdict
 from PySide2.QtWidgets import QDialog, QGridLayout, QComboBox, QVBoxLayout, QLabel, QListWidget
 
 from file_manager.data.connection import get_engine
+from file_manager.data.models import TagModel
 from file_manager.data.models.tag_to_asset import TagToAssetModel
 from file_manager.data.query import Query
 
@@ -48,6 +49,8 @@ class TagEditor(QDialog):
         self._cmbo_rem_tag.currentIndexChanged.connect(self._rem_tag)
 
     def _setup_ui(self):
+        self._cmbo_add_tag.setEditable(True)
+
         count = len(self._asset_records)
         if count == 1:
             self.setWindowTitle('Editing %s' % self._asset_records[0].name)
@@ -64,6 +67,10 @@ class TagEditor(QDialog):
             return
 
         tag_records = get_engine().select(Query('tag', name=tag))[:1]
+        if not tag_records:
+            new_tag = TagModel(tag, bg_color='#000', fg_color='#fff')
+            get_engine().create(new_tag)
+            tag_records = [new_tag]
 
         TagToAssetModel.apply_tags(self._asset_records, tag_records)
         self._list_history.addItem('Tag applied: %s' % tag)

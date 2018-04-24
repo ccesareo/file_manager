@@ -22,3 +22,8 @@ class BaseEngine(object):
     @classmethod
     def delete(cls, model):
         raise NotImplementedError()
+
+    @classmethod
+    def delete_many(cls, models):
+        raise NotImplementedError()
+

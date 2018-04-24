@@ -20,6 +20,11 @@ class FileManagerApp(QMainWindow):
         self._build_connections()
         self._setup_ui()
 
+    def resizeEvent(self, event):
+        res = super(FileManagerApp, self).resizeEvent(event)
+        self._viewer.update_layout()
+        return res
+
     def _build_ui(self):
         self.setMenuBar(FileManagerMenu())
 

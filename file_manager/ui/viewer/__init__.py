@@ -73,7 +73,7 @@ class FileManagerViewer(QWidget):
         self.setLayout(lyt_main)
 
     def _build_connections(self):
-        self._toolbar.thumb_size_changed.connect(self._update_layout)
+        self._toolbar.thumb_size_changed.connect(self.update_layout)
 
     def _setup_ui(self):
         pass
@@ -82,9 +82,9 @@ class FileManagerViewer(QWidget):
         thumb = self.sender()
         self._lyt_grid.removeWidget(thumb)
         thumb.deleteLater()
-        self._update_layout()
+        self.update_layout()
 
-    def _update_layout(self):
+    def update_layout(self):
         widgets = list()
         while self._lyt_grid.count():
             wdg = self._lyt_grid.itemAt(0).widget()

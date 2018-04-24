@@ -2,6 +2,8 @@ from PySide2.QtCore import QTimer, Qt, QRect, QPoint
 from PySide2.QtGui import QCursor, QPainter, QPixmap
 from PySide2.QtWidgets import QApplication, QDesktopWidget, QDialog
 
+from file_manager import settings
+
 
 class ScreenWidget(QDialog):
     def __init__(self, *args, **kwargs):
@@ -103,13 +105,20 @@ class ScreenWidget(QDialog):
 
 
 def grab_screen(output_path):
-    wdg = ScreenWidget()
-    if not wdg.exec_():
-        return False
+    swdg = ScreenWidget()
+    settings.main_ui.hide()
+    try:
+        result = swdg.exec_()
+        if not result:
+            return False
 
-    rect = QRect(wdg.start_pos, wdg.end_pos)
-    dw = QApplication.desktop()
-    pix = QPixmap.grabWindow(dw.winId(), x=rect.x(), y=rect.y(), w=rect.width(), h=rect.height())
+        rect = QRect(swdg.start_pos, swdg.end_pos)
+        dw = QApplication.desktop()
+        pix = QPixmap.grabWindow(dw.winId(), x=rect.x(), y=rect.y(), w=rect.width(), h=rect.height())
+
+    finally:
+        settings.main_ui.show()
+
     return pix.save(output_path, quality=100)
 
 

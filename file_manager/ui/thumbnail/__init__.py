@@ -3,14 +3,16 @@ import subprocess
 
 from PySide2.QtCore import Qt, Signal
 from PySide2.QtGui import QCursor, QFont, QPixmap
-from PySide2.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QSizePolicy
+from PySide2.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QSizePolicy, QInputDialog
 
 from file_manager.config import settings
+from file_manager.data.connection import get_engine
+from file_manager.data.query import Query
 from file_manager.ui.widgets.asset_menu import AssetEditMenu
 
 
 class FileManagerThumbnail(QWidget):
-    REF_WIDTH = 150
+    REF_WIDTH = 200
 
     deleted = Signal()
 
@@ -30,6 +32,8 @@ class FileManagerThumbnail(QWidget):
         self._lyt_tags = QVBoxLayout()
         self._btn_menu = QPushButton('...')
 
+        self._pixmap = None
+
         self._build_ui()
         self._build_connections()
         self._setup_ui()
@@ -37,10 +41,14 @@ class FileManagerThumbnail(QWidget):
     def update_thumb_size(self):
         size = settings.thumb_size * FileManagerThumbnail.REF_WIDTH / 100.0
         self.setFixedSize(size, size * 1.5)
+        if self._pixmap is not None:
+            self._thumb.setPixmap(self._pixmap.scaledToWidth(size, Qt.SmoothTransformation))
 
     def _build_ui(self):
         self.setStyleSheet("QWidget {background-color: rgb(30, 30, 30);}")
         self._lbl_title.setStyleSheet("QLabel {background-color: transparent;}")
+
+        self._lbl_title.mouseDoubleClickEvent = self._edit_title
 
         self._thumb.setAlignment(Qt.AlignCenter)
         self._thumb.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
@@ -50,14 +58,17 @@ class FileManagerThumbnail(QWidget):
 
         for tag_record in self.tag_records:
             lbl = QLabel(tag_record.name)
+            lbl.setAlignment(Qt.AlignCenter)
             lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
+            lbl.setFixedHeight(20)
             self._lyt_tags.addWidget(lbl)
         self._lyt_tags.addStretch()
 
-        font = QFont('Calibri', 12)
-        self._lbl_title.setFixedHeight(28)
+        font = QFont('Calibri', 8)
+        self._lbl_title.setFixedHeight(35)
         self._lbl_title.setAlignment(Qt.AlignCenter)
         self._lbl_title.setFont(font)
+        self._lbl_title.setWordWrap(True)
 
         self._btn_menu.setFixedSize(26, 26)
 
@@ -65,11 +76,7 @@ class FileManagerThumbnail(QWidget):
             btn = QPushButton(record.type)
             btn.setFixedSize(26, 26)
             btn.setToolTip(record.filepath)
-            if os.name == 'nt':
-                btn.clicked.connect(lambda: subprocess.Popen('explorer /select,"%s"' %
-                                                             record.filepath.replace('/', '\\')))
-            else:
-                btn.clicked.connect(lambda: os.startfile(os.path.dirname(record.filepath)))
+            btn.clicked.connect(lambda: self._open_application(record))
             return btn
 
         _app_icons = QHBoxLayout()
@@ -98,6 +105,29 @@ class FileManagerThumbnail(QWidget):
     def _build_connections(self):
         self._btn_menu.clicked.connect(self._show_menu)
 
+    def _edit_title(self, *args):
+        new_text, ok = QInputDialog.getText(self, 'New Title', 'Title:')
+        if not ok:
+            return
+
+        self.asset_record.name = new_text
+        get_engine().update(self.asset_record)
+        self._lbl_title.setText(self.asset_record.name)
+
+    def _open_application(self, record):
+        apps = get_engine().select(Query('application', file_type=record.type))
+        if apps:
+            # TODO - alert if more than 1
+            if os.name == 'nt':
+                exe = apps[0].executable_win
+                subprocess.Popen([exe, record.filepath])
+                return
+
+        if os.name == 'nt':
+            subprocess.Popen('explorer /select,"%s"' % record.filepath.replace('/', '\\'))
+        else:
+            os.startfile(os.path.dirname(record.filepath))
+
     def _show_menu(self):
         menu = AssetEditMenu([self.asset_record], parent=self)
         menu.assets_deleted.connect(self.deleted.emit)
@@ -105,7 +135,6 @@ class FileManagerThumbnail(QWidget):
         menu.exec_(QCursor.pos())
 
     def _setup_ui(self):
-        self.update_thumb_size()
         self._update_thumbnail()
 
     def _update_thumbnail(self):
@@ -113,6 +142,5 @@ class FileManagerThumbnail(QWidget):
             return
 
         thumbs_folder = settings.thumbs_folder()
-        pix = QPixmap(os.path.join(thumbs_folder, self.asset_record.thumbnail))
-        pix = pix.scaledToWidth(self._thumb.width(), Qt.SmoothTransformation)
-        self._thumb.setPixmap(pix)
+        self._pixmap = QPixmap(os.path.join(thumbs_folder, self.asset_record.thumbnail))
+        self.update_thumb_size()

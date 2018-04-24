@@ -3,9 +3,10 @@ from file_manager.data.field import Field
 
 
 class ApplicationModel(BaseModel):
-    NAME = 'path'
+    NAME = 'application'
 
     name = Field(str)
+    executable_win = Field(str)
     file_type = Field(str)
 
     def __init__(self, name, file_type, **kwargs):

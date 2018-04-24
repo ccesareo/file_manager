@@ -174,6 +174,33 @@ class PsycoPGEngine(BaseEngine):
         finally:
             conn.close()
 
+    @classmethod
+    def delete_many(cls, models):
+        """
+        :type models: list[BaseModel]
+        """
+        if not models:
+            return
+
+        assert all(x.id is not None for x in models), 'Some models have not been created.'
+
+        if len(models) > 1:
+            ids = tuple([_.id for _ in models])
+            statement = "DELETE FROM %s WHERE id in %s" % (models[0].NAME, str(ids))
+        else:
+            statement = "DELETE FROM %s WHERE id = %s" % (models[0].NAME, models[0].id)
+
+        conn = PsycoPGEngine._connect()
+        try:
+            cursor = conn.cursor()
+            LOG.debug(cursor.mogrify(statement))
+            cursor.execute(statement)
+            for model in models:
+                model.id = None
+                model.clear_changes()
+        finally:
+            conn.close()
+
     @staticmethod
     def _connect():
         """

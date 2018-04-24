@@ -7,21 +7,19 @@ VERSION = 'v0.0.1'
 
 logging.basicConfig(format='%%(asctime)s (%s) [%%(levelname)s] %%(message)s' % VERSION, datefmt='%Y-%m-%d %H:%M:%S')
 LOG = logging.getLogger('FileManager')
-LOG.setLevel(logging.DEBUG)
+LOG.setLevel(logging.INFO)
 
 
 class _Settings(object):
     def __init__(self):
         self.lib_dir = os.path.dirname(__file__)
 
+        self.main_ui = None
         self.thumb_size = 100  # percent
-
         self.thumbnail_folder_win = None
-
         self.search_timeout = None
 
         self.db_engine = None
-
         self.db_name = None
         self.db_host = None
         self.db_port = None

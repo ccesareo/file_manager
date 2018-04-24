@@ -27,6 +27,8 @@ class FileManagerBrowser(QWidget):
 
     def apply_tags(self, tag_names):
         self._tree.clear()
+        if not tag_names:
+            return
 
         engine = get_engine()
 
@@ -59,6 +61,11 @@ class FileManagerBrowser(QWidget):
         self._tree.expandAll()
 
     def apply_assets(self, asset_names):
+        self._tree.clear()
+
+        if not asset_names:
+            return
+
         engine = get_engine()
 
         q = Query('asset')
@@ -69,7 +76,6 @@ class FileManagerBrowser(QWidget):
         q.add_order_by('name', q.ORDER.ASC)
         assets = engine.select(q)
 
-        self._tree.clear()
         self.add_group(list(), assets)
         self._tree.expandAll()
 

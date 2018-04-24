@@ -18,18 +18,19 @@ class AssetModel(BaseModel):
     def delete(cls, records):
         asset_ids = [_.id for _ in records]
         engine = get_engine()
-        links = engine.select(Query('tag_to_asset', asset_id=asset_ids))
-        paths = engine.select(Query('path', asset_id=asset_ids))
-        for item in (links + paths):
-            # TODO - delete multiple by table
-            engine.delete(item)
+        links = engine.select(Query('tag_to_asset', asset_id=asset_ids)) if asset_ids else list()
+        paths = engine.select(Query('path', asset_id=asset_ids)) if asset_ids else list()
+
+        engine.delete_many(links)
+        engine.delete_many(paths)
+        engine.delete_many(records)
+
         for record in records:
             if record.thumbnail:
                 folder = settings.thumbs_folder()
                 path = os.path.join(folder, record.thumbnail)
                 if os.path.isfile(path):
                     os.remove(path)
-            engine.delete(record)
 
     @classmethod
     def merge(cls, asset_records, new_name):

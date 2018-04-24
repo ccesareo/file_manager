@@ -33,7 +33,7 @@ class AssetEditMenu(QMenu):
         TagEditor(self._asset_records, parent=self).exec_()
 
     def merge_assets_clicked(self):
-        new_name, ok = QInputDialog.getText(None, 'New Asset Name', 'Asset Name:', text=self._asset_records[0].name)
+        new_name, ok = QInputDialog.getText(self, 'New Asset Name', 'Asset Name:', text=self._asset_records[0].name)
         if not ok:
             return
 
@@ -41,13 +41,13 @@ class AssetEditMenu(QMenu):
         self.assets_deleted.emit()
 
     def del_assets_clicked(self):
-        answer = QMessageBox.question(None, 'Delete Assets?', 'Are you sure you want to remove these assets?',
+        answer = QMessageBox.question(self, 'Delete Assets?', 'Are you sure you want to remove these assets?',
                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if answer != QMessageBox.Yes:
             return
 
-        self.assets_deleted.emit()
         AssetModel.delete(self._asset_records)
+        self.assets_deleted.emit()
 
     def set_thumbnail(self):
         asset = self._asset_records[0]
