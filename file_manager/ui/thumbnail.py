@@ -1,9 +1,10 @@
 import os
+import re
 import subprocess
 
 from PySide2.QtCore import Qt, Signal
 from PySide2.QtGui import QCursor, QFont, QPixmap, QIcon
-from PySide2.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QSizePolicy, QInputDialog, QMenu, \
+from PySide2.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QInputDialog, QMenu, \
     QApplication
 
 from file_manager.config import settings
@@ -54,17 +55,20 @@ class FileManagerThumbnail(QWidget):
         self._lyt_tags = QVBoxLayout()
         self._btn_menu = QPushButton('...')
 
-        self._pixmap = None
-
         self._build_ui()
         self._build_connections()
         self._setup_ui()
 
     def update_thumb_size(self):
         size = settings.thumb_size * FileManagerThumbnail.REF_WIDTH / 100.0
-        self.setFixedSize(size, size)
-        if self._pixmap is not None:
-            self._thumb.setPixmap(self._pixmap.scaledToWidth(size, Qt.SmoothTransformation))
+        self.setFixedSize(size, size + 50)
+
+        height = (size - 20) / (4.0 / 3)
+        self._thumb.setFixedHeight(height)
+
+        lbl = self._thumb.text()
+        if 'height=' in lbl:
+            self._thumb.setText(re.sub('height=\d+', 'height=%d' % height, lbl))
 
     def _build_ui(self):
         self.setStyleSheet("QWidget {background-color: rgb(30, 30, 30);}")
@@ -72,21 +76,11 @@ class FileManagerThumbnail(QWidget):
 
         self._lbl_title.mouseDoubleClickEvent = self._edit_title
 
-        self._thumb.setAlignment(Qt.AlignCenter)
-        self._thumb.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-
         self._lyt_tags.setContentsMargins(0, 0, 0, 0)
         self._lyt_tags.setSpacing(0)
+        self._update_tags(refresh=False)
 
-        for tag_record in self.tag_records:
-            lbl = QLabel(tag_record.name)
-            lbl.setAlignment(Qt.AlignCenter)
-            lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
-            lbl.setFixedHeight(20)
-            self._lyt_tags.addWidget(lbl)
-        self._lyt_tags.addStretch()
-
-        font = QFont('Calibri', 8)
+        font = QFont('Calibri', 12)
         self._lbl_title.setFixedHeight(35)
         self._lbl_title.setAlignment(Qt.AlignCenter)
         self._lbl_title.setFont(font)
@@ -134,6 +128,7 @@ class FileManagerThumbnail(QWidget):
         menu = AssetEditMenu([self.asset_record], parent=self)
         menu.assets_deleted.connect(self.deleted.emit)
         menu.thumbnail_updated.connect(self._update_thumbnail)
+        menu.tags_updated.connect(self._update_tags)
         menu.exec_(QCursor.pos())
 
     def _setup_ui(self):
@@ -142,14 +137,41 @@ class FileManagerThumbnail(QWidget):
     def _update_thumbnail(self):
         if not self.asset_record.thumbnail:
             for path in self.path_records:
-                if path.type in ('jpg', 'png'):
-                    self._pixmap = QPixmap(path.filepath)
+                if path.type.lower() in ('jpg', 'png'):
+                    self._thumb.setText('<img height=%d src="%s"/>' % (self._thumb.height(), path.filepath))
                     self.update_thumb_size()
             return
 
         thumbs_folder = settings.thumbs_folder()
-        self._pixmap = QPixmap(os.path.join(thumbs_folder, self.asset_record.thumbnail))
+        thumb_path = os.path.join(thumbs_folder, self.asset_record.thumbnail)
+        self._thumb.setText('<img height=%d src="%s"/>' % (self._thumb.height(), thumb_path))
         self.update_thumb_size()
+
+    def _update_tags(self, refresh=True):
+        while self._lyt_tags.count():
+            wdg = self._lyt_tags.itemAt(0).widget()
+            self._lyt_tags.removeWidget(wdg)
+            wdg.deleteLater()
+
+        if refresh:
+            engine = get_engine()
+            links = engine.select(Query('tag_to_asset', asset_id=self.asset_record.id))
+
+            self.tag_records = list()
+            if links:
+                tag_ids = [_.tag_id for _ in links]
+                self.tag_records = engine.select(Query('tag', id=tag_ids))
+
+        for tag_record in self.tag_records:
+            lbl = QLabel(tag_record.name)
+            lbl.setAlignment(Qt.AlignCenter)
+            lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
+            lbl.setFixedHeight(20)
+
+            font = lbl.font()
+            font.setPointSize(14)
+            lbl.setFont(font)
+            self._lyt_tags.addWidget(lbl)
 
 
 class AppButton(QPushButton):

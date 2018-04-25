@@ -12,6 +12,7 @@ from file_manager.ui.widgets.asset_menu import AssetEditMenu
 
 class FileManagerBrowser(QWidget):
     assets_selected = Signal(list)
+    tags_updated = Signal()
 
     def __init__(self, *args, **kwargs):
         super(FileManagerBrowser, self).__init__(*args, **kwargs)
@@ -119,6 +120,7 @@ class FileManagerBrowser(QWidget):
         # TODO - catch emit if assets were removed
         menu = AssetEditMenu(assets, parent=self)
         menu.assets_deleted.connect(self._remove_selected)
+        menu.tags_updated.connect(self.tags_updated.emit)
         menu.exec_(QCursor.pos())
 
     def _remove_selected(self):

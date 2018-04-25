@@ -13,6 +13,7 @@ from file_manager.ui.widgets.tag_editor import TagEditor
 class AssetEditMenu(QMenu):
     assets_deleted = Signal()
     thumbnail_updated = Signal()
+    tags_updated = Signal()
 
     def __init__(self, asset_records, *args, **kwargs):
         """
@@ -31,6 +32,7 @@ class AssetEditMenu(QMenu):
 
     def add_tag_clicked(self):
         TagEditor(self._asset_records, parent=self).exec_()
+        self.tags_updated.emit()
 
     def merge_assets_clicked(self):
         new_name, ok = QInputDialog.getText(self, 'New Asset Name', 'Asset Name:', text=self._asset_records[0].name)

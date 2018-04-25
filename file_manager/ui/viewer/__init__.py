@@ -17,12 +17,18 @@ class FileManagerViewer(QWidget):
 
         self._lyt_grid = QGridLayout()
         self._toolbar = ViewerToolbar()
+        self._asset_names = list()
 
         self._build_ui()
         self._build_connections()
         self._setup_ui()
 
+    def refresh(self):
+        self.view_assets(self._asset_names)
+
     def view_assets(self, asset_names):
+        self._asset_names = asset_names[:]
+
         self._clear_grid()
 
         engine = get_engine()
