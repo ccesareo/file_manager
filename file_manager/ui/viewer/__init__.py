@@ -40,6 +40,8 @@ class FileManagerViewer(QWidget):
         _paths = engine.select(Query('path', asset_id=[_.id for _ in asset_records]))
         paths_by_asset = dict(fm_groupby(_paths, attrgetter('asset_id')))
 
+        FileManagerThumbnail.cache_app_icons()
+
         widgets = list()
         for asset_record in asset_records:
             _links = links_by_asset.get(asset_record.id, list())

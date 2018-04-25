@@ -8,6 +8,7 @@ class ApplicationModel(BaseModel):
     name = Field(str)
     executable_win = Field(str)
     file_type = Field(str)
+    icon = Field(str)
 
     def __init__(self, name, file_type, **kwargs):
         """

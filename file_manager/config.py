@@ -17,6 +17,7 @@ class _Settings(object):
         self.main_ui = None
         self.thumb_size = 100  # percent
         self.thumbnail_folder_win = None
+        self.app_icons_win = None
         self.search_timeout = None
 
         self.db_engine = None
@@ -34,6 +35,12 @@ class _Settings(object):
             return self.thumbnail_folder_win
         raise Exception('Only windows thumbnail folder has been defined.')
 
+    def icons_folder(self):
+        if os.name == 'nt':
+            assert self.app_icons_win, 'No app_icons_win set in settings.'
+            return self.app_icons_win
+        raise Exception('Only windows thumbnail folder has been defined.')
+
     def _load_settings(self):
         settings_file = os.path.join(self.lib_dir, 'settings.yaml')
         assert os.path.isfile(settings_file), 'No settings.yaml file found, please copy the template and modify.'
@@ -42,6 +49,7 @@ class _Settings(object):
         assert 'database' in data, 'No database settings found, please reference template.'
 
         self.thumbnail_folder_win = data.get('thumbnail_folder_win')
+        self.app_icons_win = data.get('app_icons_win')
 
         self.search_timeout = data.get('search_timeout_ms', 0)
 

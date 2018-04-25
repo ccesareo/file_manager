@@ -1,7 +1,9 @@
 import os
+import threading
 
+from PySide2.QtCore import QEvent
 from PySide2.QtWidgets import QMessageBox, QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, \
-    QPushButton
+    QPushButton, QApplication
 
 from file_manager.config import LOG
 from file_manager.data.connection import get_engine
@@ -12,11 +14,61 @@ from file_manager.data.models.tag_to_asset import TagToAssetModel
 from file_manager.data.query import Query
 
 
+class FoundPathEvent(QEvent):
+    def __init__(self, count):
+        super(FoundPathEvent, self).__init__(QEvent.Type(QEvent.registerEventType()))
+
+        self.count = count
+
+
+class ResultEvent(QEvent):
+    def __init__(self, paths):
+        super(ResultEvent, self).__init__(QEvent.Type(QEvent.registerEventType()))
+
+        self.paths = paths
+
+
+class SearchThread(threading.Thread):
+    def __init__(self, wdg, root_path, types_str):
+        super(SearchThread, self).__init__()
+
+        self._wdg = wdg
+        self._root_path = root_path
+
+        self._extensions = [x.strip() for x in types_str.split(',')] if types_str else list()
+
+        self._cancel = False
+
+    def stop(self):
+        self._cancel = True
+
+    def run(self):
+        if self._extensions:
+            self._extensions = ['.' + x.lstrip('.').lower() for x in self._extensions[:]]
+
+        found = list()
+        for root, dir, files in os.walk(self._root_path):
+            if self._cancel:
+                break
+            QApplication.postEvent(self._wdg, FoundPathEvent(len(found)))
+            for name in files:
+                ext = os.path.splitext(name)[1]
+                if self._extensions and ext.lower() not in self._extensions:
+                    continue
+
+                found.append(os.path.join(root, name).replace('\\', '/'))
+        else:
+            QApplication.postEvent(self._wdg, ResultEvent(found))
+
+
 class AssetImporter(QDialog):
+    CACHED_PATH = None
+
     def __init__(self, *args, **kwargs):
         super(AssetImporter, self).__init__(*args, **kwargs)
 
-        self._lbl_errors = QLabel()
+        self._lbl_info = QLabel()
+        self._thread = None
 
         self._edit_path = QLineEdit()
         self._edit_types = QLineEdit()
@@ -27,6 +79,20 @@ class AssetImporter(QDialog):
         self._build_ui()
         self._build_connections()
         self._setup_ui()
+
+    def event(self, event):
+        if isinstance(event, ResultEvent):
+            if import_directory_tree(event.paths):
+                self.accept()
+            else:
+                self._btn_import.setEnabled(True)
+
+        elif isinstance(event, FoundPathEvent):
+            self._lbl_info.setText('%d found.' % event.count)
+        else:
+            return super(AssetImporter, self).event(event)
+
+        return True
 
     def _build_ui(self):
         lyt_editors = QGridLayout()
@@ -41,13 +107,14 @@ class AssetImporter(QDialog):
 
         lyt_main = QVBoxLayout()
         lyt_main.addLayout(lyt_editors)
-        lyt_main.addWidget(self._lbl_errors)
+        lyt_main.addWidget(self._lbl_info)
         lyt_main.addLayout(lyt_buttons)
         self.setLayout(lyt_main)
 
     def _build_connections(self):
         self._btn_cancel.clicked.connect(self.reject)
         self._btn_import.clicked.connect(self._import_assets)
+        self.rejected.connect(self._cancel_thread)
 
     def _setup_ui(self):
         self.setWindowTitle('Import Assets')
@@ -55,70 +122,73 @@ class AssetImporter(QDialog):
         self._edit_types.setPlaceholderText('List of types in form of "fbx,mov,jpg"')
         self.setMinimumWidth(600)
 
+        if AssetImporter.CACHED_PATH:
+            self._edit_path.setText(AssetImporter.CACHED_PATH)
+
+    def _cancel_thread(self):
+        if self._thread:
+            self._thread.stop()
+            self._thread.join()
+
+        self._btn_import.setEnabled(True)
+
     def _import_assets(self):
+        self._btn_import.setEnabled(False)
+
+        self._lbl_info.clear()
+
         path = self._edit_path.text()
+
+        AssetImporter.CACHED_PATH = path
+
         if not os.path.isdir(path):
-            self._lbl_errors.setText('Folder does not exist.')
+            self._lbl_info.setText('Folder does not exist.')
             return
 
-        types_str = self._edit_types.text().strip()
-        types = list()
-        if types_str:
-            types = [x.strip() for x in types_str.split(',')]
+        if self._thread is not None:
+            self._thread.stop()
+            self._thread.join()
 
-        if not import_directory_tree(path, types):
-            return
-
-        self.accept()
+        self._thread = SearchThread(self, path, self._edit_types.text().strip())
+        self._thread.start()
 
 
-def import_directory_tree(path, extensions):
-    if extensions:
-        extensions = ['.' + x.lstrip('.').lower() for x in extensions[:]]
-
-    found = list()
-    for root, dir, files in os.walk(path):
-        for name in files:
-            prefix, ext = os.path.splitext(name)
-            if extensions and ext.lower() not in extensions:
-                continue
-            found.append(os.path.join(root, name).replace('\\', '/'))
-
+def import_directory_tree(paths):
     engine = get_engine()
 
-    if found:
-        existing_paths = engine.select(Query('path', filepath=found))
+    if paths:
+        existing_paths = engine.select(Query('path', filepath=paths))
         _paths = [x.filepath for x in existing_paths]
-        found = list(set(found) - set(_paths))
+        paths = list(set(paths) - set(_paths))
 
     types_found = set()
-    for item in found:
+    for item in paths:
         e = os.path.splitext(item)[-1]
         types_found.add(e.strip('.') or 'n/a')
 
     res = QMessageBox.question(None, 'Found Items',
-                               '%d files found, continue?\n%s' % (len(found), ','.join(types_found)),
+                               '%d files found, continue?\n%s' % (len(paths), ','.join(types_found)),
                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
     if res != QMessageBox.Yes:
         return False
 
-    if not found:
+    if not paths:
         return False
 
     # Create assets
     assets = list()
-    for path in found:
+    for path in paths:
         filename = os.path.basename(path)
         asset_name, ext = os.path.splitext(filename)
         assets.append(AssetModel(name=asset_name))
     engine.create_many(assets)
 
     # Create paths
-    paths = list()
-    for asset, path in zip(assets, found):
-        paths.append(PathModel(asset.id, path))
-    engine.create_many(paths)
+    _paths = list()
+    for asset, path in zip(assets, paths):
+        _paths.append(PathModel(asset.id, path))
+    engine.create_many(_paths)
 
     # Create tags
     _tags = engine.select(Query('tag', name='new'))

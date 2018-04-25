@@ -2,6 +2,7 @@
 search_timeout_ms: 300
 
 thumbnail_folder_win: C:/temp/thumbs
+app_icons_win: C:/temp/icons
 
 database:
   engine: 'postgresql'

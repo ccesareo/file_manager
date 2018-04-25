@@ -38,6 +38,10 @@ class BaseModel(object):
             assert k in field_names, 'Field "%s" does not exist on %s' % (k, self)
             setattr(self, k, v)
 
+        for field in field_names:
+            if isinstance(getattr(self, field), Field):
+                setattr(self, field, None)
+
     def __setattr__(self, key, value):
         old_value = getattr(self.__class__, key, None)
         super(BaseModel, self).__setattr__(key, value)

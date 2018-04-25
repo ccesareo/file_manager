@@ -16,8 +16,8 @@ class FileManagerMenu(QMenuBar):
         self.file_menu.addAction('Import Assets...', self._import_assets)
 
         self.edit_menu = self.addMenu('Edit')
-        self.edit_menu.addAction('Tag Manager...', self._manage_tags)
         self.edit_menu.addAction('Application Manager...', self._manage_apps)
+        self.edit_menu.addAction('Tag Manager...', self._manage_tags)
 
         self.super_menu = self.addMenu('Super User')
         self.super_menu.addAction('Clear Database', self._clear_database)
@@ -25,13 +25,13 @@ class FileManagerMenu(QMenuBar):
     def _manage_tags(self):
         editor = TableEditor(TagModel, allow_create=True, parent=self)
         editor.setWindowTitle('Tag Manager')
-        editor.resize(1200, 900)
+        editor.resize(1200, 600)
         editor.exec_()
 
     def _manage_apps(self):
         editor = TableEditor(ApplicationModel, allow_create=True, parent=self)
         editor.setWindowTitle('Application Manager')
-        editor.resize(1200, 900)
+        editor.resize(1200, 600)
         editor.exec_()
 
     def _clear_database(self):

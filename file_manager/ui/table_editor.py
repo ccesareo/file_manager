@@ -48,7 +48,7 @@ class TableEditor(QDialog):
                 i = self._tree.indexOfTopLevelItem(item)
                 self._tree.takeTopLevelItem(i)
 
-            self._model.delete(records)
+            self._model.delete(list(records))
 
     def _build_ui(self):
         self._tree.setRootIsDecorated(False)
