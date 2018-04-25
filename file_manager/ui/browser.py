@@ -90,6 +90,9 @@ class FileManagerBrowser(QWidget):
             item = QTreeWidgetItem([asset.name])
             top_item.addChild(item)
 
+    def clear(self):
+        self._tree.clear()
+
     def _build_ui(self):
         self._tree.setHeaderHidden(True)
 

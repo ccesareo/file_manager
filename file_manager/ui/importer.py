@@ -3,7 +3,7 @@ import threading
 
 from PySide2.QtCore import QEvent
 from PySide2.QtWidgets import QMessageBox, QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, \
-    QPushButton, QApplication
+    QPushButton, QApplication, QFileDialog
 
 from file_manager.config import LOG
 from file_manager.data.connection import get_engine
@@ -71,6 +71,7 @@ class AssetImporter(QDialog):
         self._thread = None
 
         self._edit_path = QLineEdit()
+        self._btn_browse = QPushButton('...')
         self._edit_types = QLineEdit()
 
         self._btn_import = QPushButton('Import Assets')
@@ -98,6 +99,7 @@ class AssetImporter(QDialog):
         lyt_editors = QGridLayout()
         lyt_editors.addWidget(QLabel('Folder Path'), 0, 0)
         lyt_editors.addWidget(self._edit_path, 0, 1)
+        lyt_editors.addWidget(self._btn_browse, 0, 2)
         lyt_editors.addWidget(QLabel('File Types'), 1, 0)
         lyt_editors.addWidget(self._edit_types, 1, 1)
 
@@ -114,6 +116,7 @@ class AssetImporter(QDialog):
     def _build_connections(self):
         self._btn_cancel.clicked.connect(self.reject)
         self._btn_import.clicked.connect(self._import_assets)
+        self._btn_browse.clicked.connect(self._browse_files)
         self.rejected.connect(self._cancel_thread)
 
     def _setup_ui(self):
@@ -125,6 +128,12 @@ class AssetImporter(QDialog):
         if AssetImporter.CACHED_PATH:
             self._edit_path.setText(AssetImporter.CACHED_PATH)
 
+    def _browse_files(self):
+        path = QFileDialog.getExistingDirectory(self, 'Choose Root Folder')
+        if not path:
+            return
+        self._edit_path.setText(path)
+
     def _cancel_thread(self):
         if self._thread:
             self._thread.stop()
@@ -133,8 +142,6 @@ class AssetImporter(QDialog):
         self._btn_import.setEnabled(True)
 
     def _import_assets(self):
-        self._btn_import.setEnabled(False)
-
         self._lbl_info.clear()
 
         path = self._edit_path.text()
@@ -151,6 +158,8 @@ class AssetImporter(QDialog):
 
         self._thread = SearchThread(self, path, self._edit_types.text().strip())
         self._thread.start()
+
+        self._btn_import.setEnabled(False)
 
 
 def import_directory_tree(paths):

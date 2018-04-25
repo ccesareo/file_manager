@@ -140,11 +140,13 @@ class FileManagerThumbnail(QWidget):
                 if path.type.lower() in ('jpg', 'png'):
                     self._thumb.setText('<img height=%d src="%s"/>' % (self._thumb.height(), path.filepath))
                     self.update_thumb_size()
-            return
+                    return
 
         thumbs_folder = settings.thumbs_folder()
         thumb_path = os.path.join(thumbs_folder, self.asset_record.thumbnail)
+        self._thumb.clear()
         self._thumb.setText('<img height=%d src="%s"/>' % (self._thumb.height(), thumb_path))
+        self._thumb.update()
         self.update_thumb_size()
 
     def _update_tags(self, refresh=True):

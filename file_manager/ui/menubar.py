@@ -1,3 +1,4 @@
+from PySide2.QtCore import Signal
 from PySide2.QtWidgets import QMenuBar, QMessageBox
 
 from file_manager.data.connection import get_engine
@@ -9,6 +10,8 @@ from file_manager.ui.table_editor import TableEditor
 
 
 class FileManagerMenu(QMenuBar):
+    database_cleared = Signal()
+
     def __init__(self, *args, **kwargs):
         super(FileManagerMenu, self).__init__(*args, **kwargs)
 
@@ -45,6 +48,8 @@ class FileManagerMenu(QMenuBar):
 
         AssetModel.delete(engine.select(Query('asset')))
         engine.delete_many(engine.select(Query('tag')))
+
+        self.database_cleared.emit()
 
     def _import_assets(self):
         AssetImporter(self).exec_()

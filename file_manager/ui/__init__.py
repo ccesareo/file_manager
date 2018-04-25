@@ -49,5 +49,7 @@ class FileManagerApp(QMainWindow):
         self._browser.assets_selected.connect(self._viewer.view_assets)
         self._browser.tags_updated.connect(self._viewer.refresh)
 
+        self.menuBar().database_cleared.connect(self._browser.clear)
+
     def _setup_ui(self):
         self.setWindowTitle('File Manager - %s' % VERSION)
