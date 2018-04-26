@@ -50,7 +50,7 @@ class FileManagerThumbnail(QWidget):
         self.tag_records = tag_records[:]
         self.path_records = path_records[:]
 
-        self._lbl_title = QLabel(asset_record.name)
+        self._lbl_title = QLabel(asset_record.name.replace('_', ' '))
         self._thumb = QLabel('Placeholder')
         self._lyt_tags = QVBoxLayout()
         self._btn_menu = QPushButton('...')
@@ -61,7 +61,8 @@ class FileManagerThumbnail(QWidget):
 
     def update_thumb_size(self):
         size = settings.thumb_size * FileManagerThumbnail.REF_WIDTH / 100.0
-        self.setFixedSize(size, size + 50)
+        self.setFixedWidth(size)
+        self.setMinimumHeight(size + 50)
 
         height = (size - 20) / (4.0 / 3)
         self._thumb.setFixedHeight(height)
@@ -71,23 +72,6 @@ class FileManagerThumbnail(QWidget):
             self._thumb.setText(re.sub('height=\d+', 'height=%d' % height, lbl))
 
     def _build_ui(self):
-        self.setStyleSheet("QWidget {background-color: rgb(30, 30, 30);}")
-        self._lbl_title.setStyleSheet("QLabel {background-color: transparent;}")
-
-        self._lbl_title.mouseDoubleClickEvent = self._edit_title
-
-        self._lyt_tags.setContentsMargins(0, 0, 0, 0)
-        self._lyt_tags.setSpacing(0)
-        self._update_tags(refresh=False)
-
-        font = QFont('Calibri', 12)
-        self._lbl_title.setFixedHeight(35)
-        self._lbl_title.setAlignment(Qt.AlignCenter)
-        self._lbl_title.setFont(font)
-        self._lbl_title.setWordWrap(True)
-
-        self._btn_menu.setFixedSize(26, 26)
-
         _app_icons = QHBoxLayout()
         _app_icons.setAlignment(Qt.AlignLeft)
         _app_icons.setContentsMargins(0, 0, 0, 0)
@@ -106,6 +90,7 @@ class FileManagerThumbnail(QWidget):
         lyt_main = QVBoxLayout()
         lyt_main.setContentsMargins(0, 0, 0, 0)
         lyt_main.setSpacing(4)
+        lyt_main.setAlignment(Qt.AlignTop)
         lyt_main.addWidget(self._lbl_title)
         lyt_main.addWidget(self._thumb)
         lyt_main.addLayout(lyt_bottom)
@@ -114,6 +99,31 @@ class FileManagerThumbnail(QWidget):
 
     def _build_connections(self):
         self._btn_menu.clicked.connect(self._show_menu)
+
+    def _setup_ui(self):
+        self.setStyleSheet("QWidget {background-color: rgb(30, 30, 30);}")
+
+        self._lbl_title.setFont(QFont('Calibri', 12))
+        self._lbl_title.setFixedHeight(35)
+        self._lbl_title.setAlignment(Qt.AlignCenter)
+        self._lbl_title.setWordWrap(True)
+        self._lbl_title.setStyleSheet(
+            """
+            background-color: rgba(0, 50, 150, 120);
+            color: rgb(225, 225, 225);
+            font-family: Consolas;
+            font-weight: bold;
+            """
+        )
+        self._lbl_title.mouseDoubleClickEvent = self._edit_title
+
+        self._lyt_tags.setContentsMargins(0, 0, 0, 0)
+        self._lyt_tags.setSpacing(0)
+
+        self._btn_menu.setFixedSize(26, 26)
+
+        self._update_tags(refresh=False)
+        self._update_thumbnail()
 
     def _edit_title(self, *args):
         new_text, ok = QInputDialog.getText(self, 'New Title', 'Title:')
@@ -131,9 +141,6 @@ class FileManagerThumbnail(QWidget):
         menu.tags_updated.connect(self._update_tags)
         menu.exec_(QCursor.pos())
 
-    def _setup_ui(self):
-        self._update_thumbnail()
-
     def _update_thumbnail(self):
         if not self.asset_record.thumbnail:
             for path in self.path_records:
@@ -143,6 +150,9 @@ class FileManagerThumbnail(QWidget):
                     return
 
         thumbs_folder = settings.thumbs_folder()
+        if not thumbs_folder or not self.asset_record.thumbnail:
+            return
+
         thumb_path = os.path.join(thumbs_folder, self.asset_record.thumbnail)
         self._thumb.clear()
         self._thumb.setText('<img height=%d src="%s"/>' % (self._thumb.height(), thumb_path))
@@ -185,7 +195,7 @@ class AppButton(QPushButton):
 
         self.record = path_record
 
-        self.setFixedSize(26, 26)
+        self.setFixedSize(32, 26)
         self.setToolTip(path_record.filepath)
         self.clicked.connect(self._open_application)
 
@@ -209,12 +219,13 @@ class AppButton(QPushButton):
 
     def _open_application(self):
         app = self._find_app()
-        if app and os.name == 'nt':
+        if app and os.name == 'nt' and app.executable_win:
             exe = app.executable_win
-            assert exe and os.path.isfile(exe), '%s does not exist.' % exe
-            subprocess.Popen([exe.replace('\\', '/'), self.record.filepath.replace('\\', '/')])
-        else:
-            os.startfile(self.record.filepath)
+            if os.path.isfile(exe):
+                subprocess.Popen([exe.replace('\\', '/'), self.record.filepath.replace('\\', '/')])
+                return
+
+        os.startfile(self.record.filepath)
 
     def _copy_to_clipboard(self):
         cb = QApplication.clipboard()

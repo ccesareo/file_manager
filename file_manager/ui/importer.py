@@ -176,7 +176,7 @@ def import_directory_tree(paths):
         types_found.add(e.strip('.') or 'n/a')
 
     res = QMessageBox.question(None, 'Found Items',
-                               '%d files found, continue?\n%s' % (len(paths), ','.join(types_found)),
+                               '%d new files found, continue?\n%s' % (len(paths), ','.join(types_found)),
                                QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
 
     if res != QMessageBox.Yes:

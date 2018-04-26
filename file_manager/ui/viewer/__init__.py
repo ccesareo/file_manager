@@ -36,6 +36,8 @@ class FileManagerViewer(QWidget):
         if not asset_records:
             return
 
+        asset_records.sort(key=attrgetter('name'))
+
         # Find tags
         _links = engine.select(Query('tag_to_asset', asset_id=[_.id for _ in asset_records]))
         links_by_asset = dict(fm_groupby(_links, attrgetter('asset_id')))

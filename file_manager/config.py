@@ -37,7 +37,6 @@ class _Settings(object):
 
     def icons_folder(self):
         if os.name == 'nt':
-            assert self.app_icons_win, 'No app_icons_win set in settings.'
             return self.app_icons_win
         raise Exception('Only windows thumbnail folder has been defined.')
 
