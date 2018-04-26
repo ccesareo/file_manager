@@ -64,8 +64,8 @@ class FileManagerThumbnail(QWidget):
         self.setFixedWidth(size)
         self.setMinimumHeight(size + 50)
 
-        height = (size - 20) / (4.0 / 3)
-        self._thumb.setFixedHeight(height)
+        height = size / (4.0 / 3)
+        self._thumb.setFixedSize(size, height)
 
         lbl = self._thumb.text()
         if 'height=' in lbl:
