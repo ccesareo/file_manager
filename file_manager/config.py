@@ -1,5 +1,6 @@
 import logging
 import os
+from collections import defaultdict
 
 import yaml
 
@@ -13,6 +14,8 @@ LOG.setLevel(logging.INFO)
 class _Settings(object):
     def __init__(self):
         self.lib_dir = os.path.dirname(__file__)
+
+        self.file_actions = defaultdict(dict)
 
         self.main_ui = None
         self.thumb_size = 100  # percent
@@ -28,6 +31,10 @@ class _Settings(object):
         self.db_pass = None
 
         self._load_settings()
+
+    def set_file_action(self, action_name, action_callback, filetypes):
+        for filetype in filetypes:
+            self.file_actions[filetype][action_name] = action_callback
 
     def thumbs_folder(self):
         if os.name == 'nt':

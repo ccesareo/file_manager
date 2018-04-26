@@ -211,6 +211,13 @@ class AppButton(QPushButton):
             menu = QMenu()
             menu.addAction('Copy Path', self._copy_to_clipboard)
             menu.addAction('Open Directory', self._open_directory)
+
+            t = self.record.type.lower()
+            if t in settings.file_actions:
+                menu.addSeparator()
+                for action, callback in sorted(settings.file_actions[t].items()):
+                    menu.addAction(action, lambda: callback(self.record.filepath))
+
             menu.exec_(QCursor.pos())
 
     def _find_app(self):
