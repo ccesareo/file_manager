@@ -83,7 +83,7 @@ class AssetImporter(QDialog):
 
     def event(self, event):
         if isinstance(event, ResultEvent):
-            if import_directory_tree(event.paths):
+            if import_directory_tree(self._edit_path.text().replace('\\', '/'), event.paths):
                 self.accept()
             else:
                 self._btn_import.setEnabled(True)
@@ -162,7 +162,7 @@ class AssetImporter(QDialog):
         self._btn_import.setEnabled(False)
 
 
-def import_directory_tree(paths):
+def import_directory_tree(root_path, paths):
     engine = get_engine()
 
     if paths:
@@ -196,7 +196,8 @@ def import_directory_tree(paths):
     # Create paths
     _paths = list()
     for asset, path in zip(assets, paths):
-        _paths.append(PathModel(asset.id, path))
+        short_path = path.replace(root_path, '').lstrip('/').rsplit('/', 1)[0]
+        _paths.append(PathModel(asset.id, path, short_path))
     engine.create_many(_paths)
 
     # Create tags
