@@ -1,5 +1,5 @@
-from PySide.QtCore import Signal
-from PySide.QtGui import QMenuBar, QMessageBox
+from PySide2.QtCore import Signal
+from PySide2.QtWidgets import QMenuBar, QMessageBox
 
 from file_manager.data.connection import get_engine
 from file_manager.data.models import TagModel, AssetModel

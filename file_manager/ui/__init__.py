@@ -1,9 +1,8 @@
-from PySide.QtGui import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
+from PySide2.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
 
 from file_manager.config import VERSION
 from file_manager.ui.browser import FileManagerBrowser
 from file_manager.ui.menubar import FileManagerMenu
-from file_manager.ui.style import pyside_style_rc
 from file_manager.ui.toolbar import FileManagerToolbar
 from file_manager.ui.viewer import FileManagerViewer
 

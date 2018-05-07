@@ -2,9 +2,9 @@ import os
 import re
 import subprocess
 
-from PySide.QtCore import Qt, Signal
-from PySide.QtGui import QCursor, QFont, QPixmap, QIcon
-from PySide.QtGui import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QInputDialog, QMenu, \
+from PySide2.QtCore import Qt, Signal
+from PySide2.QtGui import QCursor, QFont, QPixmap, QIcon
+from PySide2.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QInputDialog, QMenu, \
     QApplication
 
 from file_manager.config import settings

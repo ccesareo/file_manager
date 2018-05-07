@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from PySide.QtGui import QDialog, QGridLayout, QComboBox, QVBoxLayout, QLabel, QListWidget
+from PySide2.QtWidgets import QDialog, QGridLayout, QComboBox, QVBoxLayout, QLabel, QListWidget
 
 from file_manager.data.connection import get_engine
 from file_manager.data.models import TagModel
