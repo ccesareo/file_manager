@@ -1,5 +1,5 @@
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QTreeWidget, QVBoxLayout, QTreeWidgetItem, QApplication, QDialog, QPushButton, \
+from PySide.QtCore import Qt
+from PySide.QtGui import QTreeWidget, QVBoxLayout, QTreeWidgetItem, QApplication, QDialog, QPushButton, \
     QHBoxLayout, QGridLayout, QLabel, QLineEdit, QSpinBox, QMessageBox
 
 from file_manager.data.connection import get_engine

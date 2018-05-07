@@ -1,7 +1,7 @@
 import psycopg2
-from PySide2.QtCore import Signal, Qt, QEvent, QTimer
-from PySide2.QtGui import QKeyEvent
-from PySide2.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QListWidget, QApplication, QComboBox
+from PySide.QtCore import Signal, Qt, QEvent, QTimer
+from PySide.QtGui import QKeyEvent
+from PySide.QtGui import QWidget, QLineEdit, QHBoxLayout, QListWidget, QApplication, QComboBox
 
 from file_manager.config import settings
 from file_manager.data.connection import get_engine

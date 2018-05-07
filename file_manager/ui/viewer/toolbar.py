@@ -1,5 +1,5 @@
-from PySide2.QtCore import Qt, Signal
-from PySide2.QtWidgets import QWidget, QSlider, QHBoxLayout, QLabel
+from PySide.QtCore import Qt, Signal
+from PySide.QtGui import QWidget, QSlider, QHBoxLayout, QLabel
 
 from file_manager.config import settings
 

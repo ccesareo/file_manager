@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
+from PySide.QtGui import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
 
 from file_manager.config import VERSION
 from file_manager.ui.browser import FileManagerBrowser

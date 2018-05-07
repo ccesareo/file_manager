@@ -1,8 +1,8 @@
+import ConfigParser
 import logging
 import os
 from collections import defaultdict
 
-import yaml
 
 VERSION = 'v0.0.1'
 
@@ -48,24 +48,23 @@ class _Settings(object):
         raise Exception('Only windows thumbnail folder has been defined.')
 
     def _load_settings(self):
-        settings_file = os.path.join(self.lib_dir, 'settings.yaml')
-        assert os.path.isfile(settings_file), 'No settings.yaml file found, please copy the template and modify.'
+        settings_file = os.path.join(self.lib_dir, 'settings.ini')
+        assert os.path.isfile(settings_file), 'No settings.ini file found, please copy the template and modify.'
 
-        data = yaml.load(open(settings_file))
-        assert 'database' in data, 'No database settings found, please reference template.'
+        config = ConfigParser.ConfigParser()
+        config.readfp(open(settings_file))
 
-        self.thumbnail_folder_win = data.get('thumbnail_folder_win')
-        self.app_icons_win = data.get('app_icons_win')
+        self.thumbnail_folder_win = config.get('settings', 'thumbnail_folder_win')
+        self.app_icons_win = config.get('settings', 'app_icons_win')
 
-        self.search_timeout = data.get('search_timeout_ms', 0)
+        self.search_timeout = config.getint('settings', 'search_timeout_ms')
 
-        self.db_engine = data['database'].get('engine')
-
-        self.db_name = data['database'].get('name')
-        self.db_host = data['database'].get('host')
-        self.db_port = data['database'].get('port')
-        self.db_user = data['database'].get('user')
-        self.db_pass = data['database'].get('pass')
+        self.db_engine = config.get('database', 'engine')
+        self.db_name = config.get('database', 'name')
+        self.db_host = config.get('database', 'host')
+        self.db_port = config.getint('database', 'port')
+        self.db_user = config.get('database', 'user')
+        self.db_pass = config.get('database', 'pass')
 
         # Create directory
         if os.name == 'nt' and self.thumbnail_folder_win and not os.path.isdir(self.thumbnail_folder_win):
