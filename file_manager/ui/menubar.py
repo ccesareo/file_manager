@@ -1,5 +1,5 @@
 from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QMenuBar, QMessageBox
+from PySide2.QtWidgets import QMenuBar
 
 from file_manager.data.connection import get_engine
 from file_manager.data.models import TagModel, AssetModel
@@ -7,6 +7,7 @@ from file_manager.data.models.application import ApplicationModel
 from file_manager.data.query import Query
 from file_manager.ui.importer import AssetImporter
 from file_manager.ui.table_editor import TableEditor
+from file_manager.ui.widgets.dialogs import ask
 
 
 class FileManagerMenu(QMenuBar):
@@ -38,10 +39,7 @@ class FileManagerMenu(QMenuBar):
         editor.exec_()
 
     def _clear_database(self):
-        res = QMessageBox.question(self, 'Clear Database', 'This is not reversible! Continue?',
-                                   QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-        if res != QMessageBox.Yes:
+        if not ask('Clear Database', 'This is not reversible! Continue?'):
             return
 
         engine = get_engine()

@@ -1,10 +1,10 @@
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import QTreeWidget, QVBoxLayout, QTreeWidgetItem, QApplication, QDialog, QPushButton, \
-    QHBoxLayout, QGridLayout, QLabel, QLineEdit, QSpinBox, QMessageBox
+    QHBoxLayout, QGridLayout, QLabel, QLineEdit, QSpinBox
 
 from file_manager.data.connection import get_engine
-from file_manager.data.models import AssetModel
 from file_manager.data.query import Query
+from file_manager.ui.widgets.dialogs import ask
 
 
 class TableEditor(QDialog):
@@ -36,10 +36,7 @@ class TableEditor(QDialog):
             if not selected:
                 return
 
-            res = QMessageBox.question(self, 'Delete Selected?', 'Delete %d records?' % len(selected),
-                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-            if res != QMessageBox.Yes:
+            if not ask('Delete Selected?', 'Delete %d records?' % len(selected)):
                 return
 
             records = set()

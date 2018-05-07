@@ -2,7 +2,7 @@ import os
 import threading
 
 from PySide2.QtCore import QEvent
-from PySide2.QtWidgets import QMessageBox, QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, \
+from PySide2.QtWidgets import QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, \
     QPushButton, QApplication, QFileDialog
 
 from file_manager.config import LOG
@@ -12,6 +12,7 @@ from file_manager.data.models.path import PathModel
 from file_manager.data.models.tag import TagModel
 from file_manager.data.models.tag_to_asset import TagToAssetModel
 from file_manager.data.query import Query
+from file_manager.ui.widgets.dialogs import ask
 
 
 class FoundPathEvent(QEvent):
@@ -175,11 +176,7 @@ def import_directory_tree(root_path, paths):
         e = os.path.splitext(item)[-1]
         types_found.add(e.strip('.') or 'n/a')
 
-    res = QMessageBox.question(None, 'Found Items',
-                               '%d new files found, continue?\n%s' % (len(paths), ','.join(types_found)),
-                               QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-    if res != QMessageBox.Yes:
+    if not ask('Found Items', '%d new files found, continue?\n%s' % (len(paths), ','.join(types_found))):
         return False
 
     if not paths:

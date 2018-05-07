@@ -1,11 +1,12 @@
 import os
 
 from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QMenu, QMessageBox, QInputDialog
+from PySide2.QtWidgets import QMenu, QInputDialog
 
 from file_manager.config import settings
 from file_manager.data.connection import get_engine
 from file_manager.data.models.asset import AssetModel
+from file_manager.ui.widgets.dialogs import ask
 from file_manager.ui.widgets.screen_grabber import grab_screen
 from file_manager.ui.widgets.tag_editor import TagEditor
 
@@ -43,9 +44,7 @@ class AssetEditMenu(QMenu):
         self.assets_deleted.emit()
 
     def del_assets_clicked(self):
-        answer = QMessageBox.question(self, 'Delete Assets?', 'Are you sure you want to remove these assets?',
-                                      QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if answer != QMessageBox.Yes:
+        if not ask('Delete Assets?', 'Are you sure you want to remove these assets?'):
             return
 
         AssetModel.delete(self._asset_records)

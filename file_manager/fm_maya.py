@@ -1,15 +1,7 @@
-"""
-import sys
-sys.path.append(r'C:\Users\craig\PycharmProjects\file_manager')
-sys.path.append(r'C:\Python27\Lib\site-packages\psycopg2-2.7.4-py2.7-win-amd64.egg')
-from file_manager.fm_maya import run_maya
-run_maya()
-"""
-
 import maya.cmds as cmds
 from PySide2.QtWidgets import qApp
 
-from file_manager import FileManagerApp
+from file_manager import FileManagerApp, settings
 
 # Window title and object names
 WINDOW_TITLE = 'FileManager'
@@ -37,5 +29,7 @@ def run_maya():
     _maya_delete_ui()  # Delete any existing existing UI
 
     app = FileManagerApp(parent=_maya_main_window())
+    settings.main_ui = app
     app.setProperty("saveWindowPref", True)
+    app.resize(1200, 900)
     app.show()  # Show the UI
