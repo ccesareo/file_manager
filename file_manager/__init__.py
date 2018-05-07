@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QApplication
+from Qt.QtWidgets import QApplication
 
 from file_manager.config import settings
 from file_manager.ui import FileManagerApp

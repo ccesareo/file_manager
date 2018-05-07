@@ -1,9 +1,9 @@
 from collections import defaultdict
 from operator import attrgetter
 
-from PySide2.QtCore import Signal, QTimer, Qt
-from PySide2.QtGui import QCursor
-from PySide2.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
+from Qt.QtCore import Signal, QTimer, Qt
+from Qt.QtGui import QCursor
+from Qt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
 
 from file_manager.data.connection import get_engine
 from file_manager.data.query import Query

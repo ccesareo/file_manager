@@ -1,7 +1,7 @@
 import os
 
-from PySide2.QtCore import Signal
-from PySide2.QtWidgets import QMenu, QInputDialog
+from Qt.QtCore import Signal
+from Qt.QtWidgets import QMenu, QInputDialog
 
 from file_manager.config import settings
 from file_manager.data.connection import get_engine

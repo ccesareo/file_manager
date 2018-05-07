@@ -1,8 +1,8 @@
 import os
 import threading
 
-from PySide2.QtCore import QEvent
-from PySide2.QtWidgets import QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, \
+from Qt.QtCore import QEvent
+from Qt.QtWidgets import QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, \
     QPushButton, QApplication, QFileDialog
 
 from file_manager.config import LOG

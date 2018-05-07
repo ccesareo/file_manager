@@ -1,7 +1,7 @@
 from operator import attrgetter
 
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QWidget, QGridLayout, QScrollArea, QVBoxLayout
+from Qt.QtCore import Qt
+from Qt.QtWidgets import QWidget, QGridLayout, QScrollArea, QVBoxLayout
 
 from file_manager.config import settings
 from file_manager.data.connection import get_engine

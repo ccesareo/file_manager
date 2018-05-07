@@ -1,4 +1,4 @@
-from PySide2.QtWidgets import QDialog, QGridLayout, QLabel, QPushButton
+from Qt.QtWidgets import QDialog, QGridLayout, QLabel, QPushButton
 
 
 def ask(title, question):

@@ -1,6 +1,6 @@
-from PySide2.QtCore import QTimer, Qt, QRect, QPoint
-from PySide2.QtGui import QCursor, QPainter, QPixmap
-from PySide2.QtWidgets import QApplication, QDesktopWidget, QDialog
+from Qt.QtCore import QTimer, Qt, QRect, QPoint
+from Qt.QtGui import QCursor, QPainter, QPixmap
+from Qt.QtWidgets import QApplication, QDesktopWidget, QDialog
 
 from file_manager import settings
 
