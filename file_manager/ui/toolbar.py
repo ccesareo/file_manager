@@ -1,4 +1,5 @@
-import psycopg2
+import traceback
+
 from Qt.QtCore import Signal, Qt, QEvent, QTimer
 from Qt.QtGui import QKeyEvent
 from Qt.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QListWidget, QApplication, QComboBox
@@ -70,7 +71,8 @@ class FileManagerToolbar(QWidget):
         engine = get_engine()
         try:
             result = engine.select(q)
-        except psycopg2.DataError:
+        except Exception as e:
+            traceback.print_exc()
             result = list()
 
         if result:

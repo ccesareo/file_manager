@@ -8,7 +8,7 @@ VERSION = 'v0.0.1'
 
 logging.basicConfig(format='%%(asctime)s (%s) [%%(levelname)s] %%(message)s' % VERSION, datefmt='%Y-%m-%d %H:%M:%S')
 LOG = logging.getLogger('FileManager')
-LOG.setLevel(logging.INFO)
+LOG.setLevel(logging.DEBUG)
 
 
 class _Settings(object):
@@ -62,7 +62,7 @@ class _Settings(object):
         self.db_engine = config.get('database', 'engine')
         self.db_name = config.get('database', 'name')
         self.db_host = config.get('database', 'host')
-        self.db_port = config.getint('database', 'port')
+        self.db_port = int(config.get('database', 'port') or 0)
         self.db_user = config.get('database', 'user')
         self.db_pass = config.get('database', 'pass')
 

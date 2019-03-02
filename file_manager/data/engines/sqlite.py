@@ -1,17 +1,16 @@
 import datetime
+import re
+import sqlite3
 from operator import attrgetter
 
-import psycopg2
-import psycopg2.extras
-
-from file_manager.config import settings, VERSION, LOG
+from file_manager.config import LOG
 from file_manager.data.base_engine import BaseEngine
 from file_manager.data.field import Field
 from file_manager.data.models import find_model
 from file_manager.data.query import Query
 
 
-class PsycoPGEngine(BaseEngine):
+class SqliteEngine(BaseEngine):
     @classmethod
     def setup_model(cls, model_class):
         """
@@ -19,11 +18,11 @@ class PsycoPGEngine(BaseEngine):
         """
         assert model_class.NAME is not None, 'Model %s does not have a NAME.' % model_class
 
-        conn = PsycoPGEngine._connect()
+        conn = SqliteEngine._connect()
         cursor = conn.cursor()
         try:
-            cursor.execute('CREATE TABLE "%s" (id SERIAL PRIMARY KEY NOT NULL);' % model_class.NAME)
-        except psycopg2.ProgrammingError as e:
+            cursor.execute('CREATE TABLE "%s" (id INTEGER PRIMARY KEY NOT NULL);' % model_class.NAME)
+        except sqlite3.Error as e:
             if 'already exists' in str(e):
                 LOG.debug('Table %s already exists.' % model_class.NAME)
             else:
@@ -34,8 +33,8 @@ class PsycoPGEngine(BaseEngine):
                 continue
             try:
                 cursor.execute('ALTER TABLE "%s" ADD COLUMN "%s" %s;' % (model_class.NAME, field.name,
-                                                                         PsycoPGEngine._map_type(field.type)))
-            except psycopg2.ProgrammingError as e:
+                                                                         SqliteEngine._map_type(field.type)))
+            except sqlite3.Error as e:
                 if 'already exists' in str(e):
                     LOG.debug('Column %s.%s already exists.' % (model_class.NAME, field.name))
                 else:
@@ -60,55 +59,31 @@ class PsycoPGEngine(BaseEngine):
 
         model_values = [data[k] for k in columns]
 
-        values = ('%s,' * len(columns)).rstrip(',')
-        statement = "INSERT INTO %s(%s) VALUES (%s) RETURNING *" % (model.NAME, ', '.join(columns), values)
-        conn = PsycoPGEngine._connect()
+        values = ('?,' * len(columns)).rstrip(',')
+        statement = "INSERT INTO %s(%s) VALUES (%s)" % (model.NAME, ', '.join(columns), values)
+        conn = SqliteEngine._connect()
         try:
             cursor = conn.cursor()
-            LOG.debug(cursor.mogrify(statement, model_values))
+            # LOG.debug(statement % tuple(model_values))
             cursor.execute(statement, model_values)
-            new_data = cursor.fetchall()[0]
-            # Apply new data
-            for k, v in new_data.items():
-                setattr(model, k, v)
-            model.clear_changes()
+            last_id = cursor.lastrowid
         finally:
+            conn.commit()
             conn.close()
+
+        new_model = cls.select(Query(model.NAME, id=int(last_id)))[0]
+        # Apply new data
+        for k, v in new_model.data().items():
+            setattr(model, k, v)
+        model.clear_changes()
 
     @classmethod
     def create_many(cls, models):
         assert all(x.id is None for x in models), 'Some models already exist.'
 
-        model_name = models[0].NAME
-        columns = [field.name for field in models[0].fields() if field.name != 'id']
-
-        all_values = list()
+        # SQLite cannot return multiple results back from an INSERT many statement
         for model in models:
-            _data = model.data()
-            _data['timestamp'] = datetime.datetime.now()
-            _data.pop('id', None)
-            for k, v in _data.items():
-                _data[k] = str(v) if v not in (0, None, '') else None
-            model_values = [_data[k] for k in columns]
-            all_values.extend(model_values)
-
-        _arg_string = ('%s,' * len(columns)).rstrip(',')
-        values = ['(%s)' % _arg_string] * len(models)
-        statement = "INSERT INTO %s(%s) VALUES %s RETURNING *" % (model_name, ', '.join(columns), ','.join(values))
-        conn = PsycoPGEngine._connect()
-        try:
-            cursor = conn.cursor()
-            LOG.debug(cursor.mogrify(statement, all_values))
-            cursor.execute(statement, all_values)
-            new_records = cursor.fetchall()
-
-            # Apply new data
-            for model, data in zip(models, new_records):
-                for k, v in data.items():
-                    setattr(model, k, v)
-                model.clear_changes()
-        finally:
-            conn.close()
+            cls.create(model)
 
     @classmethod
     def select(cls, query):
@@ -116,18 +91,19 @@ class PsycoPGEngine(BaseEngine):
         :type query: file_manager.data.query.Query
         :rtype: list[file_manager.data.base_model.BaseModel]
         """
-        statement = query.build_query(query.DBLANG.POSTGRES)
+        statement = query.build_query(query.DBLANG.SQLITE)
         model = find_model(query.table())
 
-        conn = PsycoPGEngine._connect()
+        conn = SqliteEngine._connect()
         try:
             cursor = conn.cursor()
             LOG.debug(statement)
             cursor.execute(statement)
             result = cursor.fetchall()
-            LOG.debug('%s - Found %d records.' % (cursor.mogrify(statement), len(result)))
+            LOG.debug('%s - Found %d records.' % (statement, len(result)))
             return [model(**r) for r in result]
         finally:
+            conn.commit()
             conn.close()
 
     @classmethod
@@ -138,26 +114,7 @@ class PsycoPGEngine(BaseEngine):
         """
         assert model.id is not None, 'Record has not been created.'
 
-        changes = model.changes()
-        columns = changes.keys()
-        values = changes.values()
-        values = [str(v) if v not in (0, None, '') else None for v in values]
-
-        set_data = ['"%s"=%%s' % column for column in columns]
-
-        statement = "UPDATE %s SET %s WHERE id=%s RETURNING *" % (model.NAME, ', '.join(set_data), model.id)
-        conn = PsycoPGEngine._connect()
-        try:
-            cursor = conn.cursor()
-            LOG.debug(cursor.mogrify(statement, values))
-            cursor.execute(statement, values)
-            new_data = cursor.fetchall()[0]
-            # Apply new data
-            for k, v in new_data.items():
-                setattr(model, k, v)
-            model.clear_changes()
-        finally:
-            conn.close()
+        cls.update_many([model])
 
     @classmethod
     def update_many(cls, models):
@@ -178,7 +135,7 @@ class PsycoPGEngine(BaseEngine):
             values = changes.values()
             values = [str(v) if v not in (0, None, '') else None for v in values]
 
-            set_data = ['"%s"=%%s' % column for column in columns]
+            set_data = ['"%s"=?' % column for column in columns]
 
             columns = [field.name for field in models[0].fields() if field.name != 'id']
 
@@ -195,31 +152,33 @@ class PsycoPGEngine(BaseEngine):
             statement = "UPDATE %s SET %s WHERE id=%s;" % (model_name, ', '.join(set_data), model.id)
             cmd_value_pairs.append((statement, values))
 
-        conn = PsycoPGEngine._connect()
+        conn = SqliteEngine._connect()
         try:
             cursor = conn.cursor()
             statements = list()
+            all_values = list()
             for cmd, values in cmd_value_pairs:
-                statement = cursor.mogrify(cmd, values)
-                statements.append(statement)
-                LOG.debug(statement)
-            cursor.execute('\n'.join(statements))
+                LOG.debug(cmd)
+                statements.append(cmd)
+                all_values.extend(values)
+            cursor.execute('\n'.join(statements), all_values)
 
-            refresh_records = PsycoPGEngine.select(Query(model_name, id=[_.id for _ in models]))
+            refresh_records = SqliteEngine.select(Query(model_name, id=[_.id for _ in models]))
             refresh_records.sort(key=attrgetter('id'))
 
             assert len(models) == len(refresh_records), 'Updated model count does not match refresh count.'
 
             # Apply new data
             for model, new_model in zip(models, refresh_records):
-                for k, v in new_model.data():
+                for k, v in new_model.data().items():
                     setattr(model, k, v)
                 model.clear_changes()
         finally:
+            conn.commit()
             conn.close()
 
         # statement = "UPDATE %s SET %s WHERE id=%s RETURNING *" % (model.NAME, ', '.join(set_data), model.id)
-        # conn = PsycoPGEngine._connect()
+        # conn = SqliteEngine._connect()
         # try:
         #     cursor = conn.cursor()
         #     LOG.debug(cursor.mogrify(statement, values))
@@ -230,6 +189,7 @@ class PsycoPGEngine(BaseEngine):
         #         setattr(model, k, v)
         #     model.clear_changes()
         # finally:
+        #     conn.commit()
         #     conn.close()
 
     @classmethod
@@ -240,14 +200,15 @@ class PsycoPGEngine(BaseEngine):
         assert model.id is not None, 'Record has not been created.'
 
         statement = "DELETE FROM %s WHERE id=%s" % (model.NAME, model.id)
-        conn = PsycoPGEngine._connect()
+        conn = SqliteEngine._connect()
         try:
             cursor = conn.cursor()
-            LOG.debug(cursor.mogrify(statement))
+            LOG.debug(statement)
             cursor.execute(statement)
             model.id = None
             model.clear_changes()
         finally:
+            conn.commit()
             conn.close()
 
     @classmethod
@@ -266,15 +227,16 @@ class PsycoPGEngine(BaseEngine):
         else:
             statement = "DELETE FROM %s WHERE id = %s" % (models[0].NAME, models[0].id)
 
-        conn = PsycoPGEngine._connect()
+        conn = SqliteEngine._connect()
         try:
             cursor = conn.cursor()
-            LOG.debug(cursor.mogrify(statement))
+            LOG.debug(statement)
             cursor.execute(statement)
             for model in models:
                 model.id = None
                 model.clear_changes()
         finally:
+            conn.commit()
             conn.close()
 
     @staticmethod
@@ -282,17 +244,9 @@ class PsycoPGEngine(BaseEngine):
         """
         :rtype: psycopg2.psycopg1.cursor
         """
-        conn = psycopg2.connect(
-            host=settings.db_host,
-            user=settings.db_user,
-            password=settings.db_pass,
-            database=settings.db_name,
-            port=settings.db_port,
-            cursor_factory=psycopg2.extras.RealDictCursor,
-            application_name='File Manager %s' % VERSION,
-            connect_timeout=5
-        )
-        conn.autocommit = True
+        conn = sqlite3.connect('C:/Temp/test.sqlite')
+        conn.row_factory = sqlite3.Row
+        conn.create_function("REGEXP", 2, _regexp)
         return conn
 
     @staticmethod
@@ -309,3 +263,7 @@ class PsycoPGEngine(BaseEngine):
             return 'TIMESTAMP WITH TIME ZONE'
         else:
             raise Exception('Invalid type %s, could not map to engine.' % typ)
+
+
+def _regexp(expr, item):
+    return re.compile(expr).search(item) is not None

@@ -13,6 +13,7 @@ class Query(object):
     class DBLANG(object):
         MYSQL = 'MYSQL'
         POSTGRES = 'postgresql'
+        SQLITE = 'SQLITE'
 
     class OP(object):
         EQ = '='
@@ -43,7 +44,7 @@ class Query(object):
             :param language:
             :type language:
             """
-            if language == Query.DBLANG.MYSQL:
+            if language in (Query.DBLANG.MYSQL, Query.DBLANG.SQLITE):
                 if operator == Query.OP.MATCH:
                     return 'REGEXP'
                 elif operator == Query.OP.NMATCH:

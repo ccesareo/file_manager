@@ -101,20 +101,20 @@ class FileManagerThumbnail(QWidget):
         self._btn_menu.clicked.connect(self._show_menu)
 
     def _setup_ui(self):
-        self.setStyleSheet("QWidget {background-color: rgb(30, 30, 30);}")
+        # self.setStyleSheet("QWidget {background-color: rgb(30, 30, 30);}")
 
         self._lbl_title.setFont(QFont('Calibri', 12))
         self._lbl_title.setFixedHeight(35)
         self._lbl_title.setAlignment(Qt.AlignCenter)
         self._lbl_title.setWordWrap(True)
-        self._lbl_title.setStyleSheet(
-            """
-            background-color: rgba(0, 50, 150, 120);
-            color: rgb(225, 225, 225);
-            font-family: Consolas;
-            font-weight: bold;
-            """
-        )
+        # self._lbl_title.setStyleSheet(
+        #     """
+        #     background-color: rgba(0, 50, 150, 120);
+        #     color: rgb(225, 225, 225);
+        #     font-family: Consolas;
+        #     font-weight: bold;
+        #     """
+        # )
         self._lbl_title.mouseDoubleClickEvent = self._edit_title
 
         self._lyt_tags.setContentsMargins(0, 0, 0, 0)
@@ -177,7 +177,7 @@ class FileManagerThumbnail(QWidget):
         for tag_record in self.tag_records:
             lbl = QLabel(tag_record.name)
             lbl.setAlignment(Qt.AlignCenter)
-            lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
+            # lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
             lbl.setFixedHeight(20)
 
             font = lbl.font()

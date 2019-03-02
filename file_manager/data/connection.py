@@ -9,5 +9,8 @@ def get_engine():
     if engine_name == 'postgresql':
         from file_manager.data.engines.postgres import PsycoPGEngine
         return PsycoPGEngine
+    elif engine_name == 'sqlite':
+        from file_manager.data.engines.sqlite import SqliteEngine
+        return SqliteEngine
     else:
         raise Exception('No engine found for "%s"' % engine_name)
