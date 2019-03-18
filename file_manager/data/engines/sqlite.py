@@ -23,7 +23,7 @@ class SqliteEngine(BaseEngine):
         try:
             cursor.execute('CREATE TABLE "%s" (id INTEGER PRIMARY KEY NOT NULL);' % model_class.NAME)
         except sqlite3.Error as e:
-            if 'already exists' in str(e):
+            if 'already exists' in str(e) or 'duplicate column name' in str(e):
                 LOG.debug('Table %s already exists.' % model_class.NAME)
             else:
                 raise
@@ -35,7 +35,7 @@ class SqliteEngine(BaseEngine):
                 cursor.execute('ALTER TABLE "%s" ADD COLUMN "%s" %s;' % (model_class.NAME, field.name,
                                                                          SqliteEngine._map_type(field.type)))
             except sqlite3.Error as e:
-                if 'already exists' in str(e):
+                if 'already exists' in str(e) or 'duplicate column name' in str(e):
                     LOG.debug('Column %s.%s already exists.' % (model_class.NAME, field.name))
                 else:
                     raise

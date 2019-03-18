@@ -32,7 +32,7 @@ class ScreenWidget(QDialog):
 
     def _setup_ui(self):
         self.setWindowOpacity(.5)
-        self.setWindowFlags(Qt.WA_AlwaysStackOnTop)
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
     def _build_connections(self):
         self._timer_move_screen.timeout.connect(self._check_mouse_position)
@@ -106,7 +106,8 @@ class ScreenWidget(QDialog):
 
 def grab_screen(output_path):
     swdg = ScreenWidget()
-    settings.main_ui.hide()
+    if settings.main_ui:
+        settings.main_ui.hide()
     try:
         result = swdg.exec_()
         if not result:
@@ -117,7 +118,8 @@ def grab_screen(output_path):
         pix = QPixmap.grabWindow(dw.winId(), x=rect.x(), y=rect.y(), w=rect.width(), h=rect.height())
 
     finally:
-        settings.main_ui.show()
+        if settings.main_ui:
+            settings.main_ui.show()
 
     return pix.save(output_path, quality=100)
 
