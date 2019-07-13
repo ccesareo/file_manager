@@ -5,10 +5,10 @@ import psycopg2
 import psycopg2.extras
 
 from .base_engine import BaseEngine
+from ..entities import find_entity
+from ..field import Field
+from ..query import Query
 from ...config import settings, VERSION, LOG
-from ...data.entities import find_entity
-from ...data.field import Field
-from ...data.query import Query
 
 
 class PsycoPGEngine(BaseEngine):

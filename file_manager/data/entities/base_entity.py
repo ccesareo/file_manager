@@ -2,8 +2,8 @@ import datetime
 import getpass
 import inspect
 
-from ...data.connection import get_engine
-from ...data.field import Field
+from ..connection import get_engine
+from ..field import Field
 
 
 class BaseEntity(object):

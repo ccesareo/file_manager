@@ -3,11 +3,11 @@ from operator import attrgetter
 from Qt.QtCore import Qt
 from Qt.QtWidgets import QWidget, QGridLayout, QScrollArea, QVBoxLayout
 
+from .toolbar import ViewerToolbar
+from ..thumbnail import FileManagerThumbnail
 from ...config import settings
 from ...data.connection import get_engine
 from ...data.query import Query
-from ...ui.thumbnail import FileManagerThumbnail
-from ...ui.viewer.toolbar import ViewerToolbar
 from ...utils import fm_groupby
 
 

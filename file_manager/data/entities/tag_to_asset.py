@@ -1,7 +1,7 @@
 from .base_entity import BaseEntity
-from ...data.connection import get_engine
-from ...data.field import Field
-from ...data.query import Query
+from ..connection import get_engine
+from ..field import Field
+from ..query import Query
 
 
 class TagToAssetEntity(BaseEntity):

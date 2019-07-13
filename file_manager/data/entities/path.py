@@ -1,7 +1,7 @@
 import os
 
 from .base_entity import BaseEntity
-from ...data.field import Field
+from ..field import Field
 
 
 class PathEntity(BaseEntity):

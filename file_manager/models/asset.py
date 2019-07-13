@@ -1,6 +1,6 @@
 import weakref
 
-from PySide.QtCore import Signal
+from Qt.QtCore import Signal
 
 _CACHE = weakref.WeakValueDictionary()
 

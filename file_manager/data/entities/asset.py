@@ -1,11 +1,11 @@
 import os
 
 from .base_entity import BaseEntity
+from ..connection import get_engine
+from ..entities.tag_to_asset import TagToAssetEntity
+from ..field import Field
+from ..query import Query
 from ...config import settings
-from ...data.connection import get_engine
-from ...data.entities.tag_to_asset import TagToAssetEntity
-from ...data.field import Field
-from ...data.query import Query
 
 
 class AssetEntity(BaseEntity):

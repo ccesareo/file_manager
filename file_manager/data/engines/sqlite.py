@@ -5,10 +5,10 @@ import sqlite3
 from operator import attrgetter
 
 from .base_engine import BaseEngine
+from ..entities import find_entity
+from ..field import Field
+from ..query import Query
 from ...config import settings, LOG
-from ...data.entities import find_entity
-from ...data.field import Field
-from ...data.query import Query
 
 
 class SqliteEngine(BaseEngine):

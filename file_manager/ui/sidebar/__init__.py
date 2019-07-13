@@ -1,7 +1,7 @@
-from PySide.QtCore import Signal
+from Qt.QtCore import Signal
 from Qt.QtWidgets import QTabWidget
 
-from ...ui.sidebar.asset_browser import AssetBrowser
+from .asset_browser import AssetBrowser
 
 
 class SideBarBrowser(QTabWidget):

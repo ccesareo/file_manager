@@ -5,9 +5,9 @@ from Qt.QtCore import Signal, QTimer, Qt
 from Qt.QtGui import QCursor
 from Qt.QtWidgets import QWidget, QTreeWidget, QVBoxLayout, QTreeWidgetItem
 
+from ..widgets.asset_menu import AssetEditMenu
 from ...data.connection import get_engine
 from ...data.query import Query
-from ...ui.widgets.asset_menu import AssetEditMenu
 
 
 class AssetBrowser(QWidget):
