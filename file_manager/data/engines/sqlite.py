@@ -1,9 +1,9 @@
 import datetime
+import os
 import re
 import sqlite3
 from operator import attrgetter
-
-from ...config import LOG
+from ...config import settings, LOG
 from ...data.base_engine import BaseEngine
 from ...data.field import Field
 from ...data.entities import find_entity
@@ -244,7 +244,8 @@ class SqliteEngine(BaseEngine):
         """
         :rtype: psycopg2.psycopg1.cursor
         """
-        conn = sqlite3.connect('C:/Temp/test.sqlite')
+        assert os.path.isfile(settings.db_host), 'Please set the database file path to "host" in settings.ini.'
+        conn = sqlite3.connect(settings.db_host)
         conn.row_factory = sqlite3.Row
         conn.create_function("REGEXP", 2, _regexp)
         return conn
