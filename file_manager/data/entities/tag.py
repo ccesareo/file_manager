@@ -1,12 +1,12 @@
 import random
 
-from file_manager.data.base_model import BaseModel
+from file_manager.data.base_entity import BaseEntity
 from file_manager.data.connection import get_engine
 from file_manager.data.field import Field
 from file_manager.data.query import Query
 
 
-class TagModel(BaseModel):
+class TagEntity(BaseEntity):
     NAME = 'tag'
 
     name = Field(str)
@@ -26,7 +26,7 @@ class TagModel(BaseModel):
         engine.delete_many(list(records))
 
     def __init__(self, name, **kwargs):
-        super(TagModel, self).__init__(**kwargs)
+        super(TagEntity, self).__init__(**kwargs)
 
         self.name = name
         if 'bg_color' not in kwargs:

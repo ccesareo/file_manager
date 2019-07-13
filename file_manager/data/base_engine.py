@@ -1,14 +1,14 @@
 class BaseEngine(object):
     @classmethod
-    def setup_model(cls, model_class):
+    def setup_entity(cls, entity_class):
         raise NotImplementedError()
 
     @classmethod
-    def create(cls, model):
+    def create(cls, entity):
         raise NotImplementedError()
 
     @classmethod
-    def create_many(cls, models):
+    def create_many(cls, entities):
         raise NotImplementedError()
 
     @classmethod
@@ -16,18 +16,18 @@ class BaseEngine(object):
         raise NotImplementedError()
 
     @classmethod
-    def update(cls, model):
+    def update(cls, entity):
         raise NotImplementedError()
 
     @classmethod
-    def update_many(cls, models):
+    def update_many(cls, entities):
         raise NotImplementedError()
 
     @classmethod
-    def delete(cls, model):
+    def delete(cls, entity):
         raise NotImplementedError()
 
     @classmethod
-    def delete_many(cls, models):
+    def delete_many(cls, entities):
         raise NotImplementedError()
 

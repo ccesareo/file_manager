@@ -3,8 +3,8 @@ from collections import defaultdict
 from Qt.QtWidgets import QDialog, QGridLayout, QComboBox, QVBoxLayout, QLabel, QListWidget
 
 from file_manager.data.connection import get_engine
-from file_manager.data.models import TagModel
-from file_manager.data.models.tag_to_asset import TagToAssetModel
+from file_manager.data.entities import TagEntity
+from file_manager.data.entities.tag_to_asset import TagToAssetEntity
 from file_manager.data.query import Query
 
 
@@ -68,11 +68,11 @@ class TagEditor(QDialog):
 
         tag_records = get_engine().select(Query('tag', name=tag))[:1]
         if not tag_records:
-            new_tag = TagModel(tag, bg_color='#000', fg_color='#fff')
+            new_tag = TagEntity(tag, bg_color='#000', fg_color='#fff')
             get_engine().create(new_tag)
             tag_records = [new_tag]
 
-        TagToAssetModel.apply_tags(self._asset_records, tag_records)
+        TagToAssetEntity.apply_tags(self._asset_records, tag_records)
         self._list_history.addItem('Tag applied: %s' % tag)
         if tag not in self._shared_tags:
             self._cmbo_rem_tag.addItem(tag)
@@ -88,7 +88,7 @@ class TagEditor(QDialog):
 
         tag_records = get_engine().select(Query('tag', name=tag))[:1]
 
-        TagToAssetModel.remove_tags(self._asset_records, tag_records)
+        TagToAssetEntity.remove_tags(self._asset_records, tag_records)
         self._list_history.addItem('Tag removed: %s' % tag)
 
         index = self._cmbo_rem_tag.currentIndex()

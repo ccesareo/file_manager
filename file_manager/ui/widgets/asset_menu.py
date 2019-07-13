@@ -5,7 +5,7 @@ from Qt.QtWidgets import QMenu, QInputDialog
 
 from file_manager.config import settings
 from file_manager.data.connection import get_engine
-from file_manager.data.models.asset import AssetModel
+from file_manager.data.entities.asset import AssetEntity
 from file_manager.ui.widgets.dialogs import ask
 from file_manager.ui.widgets.screen_grabber import grab_screen
 from file_manager.ui.widgets.tag_editor import TagEditor
@@ -18,7 +18,7 @@ class AssetEditMenu(QMenu):
 
     def __init__(self, asset_records, *args, **kwargs):
         """
-        :type asset_records: list[file_manager.data.models.asset.AssetModel]
+        :type asset_records: list[file_manager.data.entities.asset.AssetEntity]
         """
         super(AssetEditMenu, self).__init__(*args, **kwargs)
 
@@ -40,14 +40,14 @@ class AssetEditMenu(QMenu):
         if not ok:
             return
 
-        AssetModel.merge(self._asset_records, new_name)
+        AssetEntity.merge(self._asset_records, new_name)
         self.assets_deleted.emit()
 
     def del_assets_clicked(self):
         if not ask('Delete Assets?', 'Are you sure you want to remove these assets?'):
             return
 
-        AssetModel.delete(self._asset_records)
+        AssetEntity.delete(self._asset_records)
         self.assets_deleted.emit()
 
     def set_thumbnail(self):

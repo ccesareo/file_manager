@@ -7,10 +7,10 @@ from Qt.QtWidgets import QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, Q
 
 from file_manager.config import LOG
 from file_manager.data.connection import get_engine
-from file_manager.data.models.asset import AssetModel
-from file_manager.data.models.path import PathModel
-from file_manager.data.models.tag import TagModel
-from file_manager.data.models.tag_to_asset import TagToAssetModel
+from file_manager.data.entities.asset import AssetEntity
+from file_manager.data.entities.path import PathEntity
+from file_manager.data.entities.tag import TagEntity
+from file_manager.data.entities.tag_to_asset import TagToAssetEntity
 from file_manager.data.query import Query
 from file_manager.ui.widgets.dialogs import ask
 
@@ -187,28 +187,28 @@ def import_directory_tree(root_path, paths):
     for path in paths:
         filename = os.path.basename(path)
         asset_name, ext = os.path.splitext(filename)
-        assets.append(AssetModel(name=asset_name))
+        assets.append(AssetEntity(name=asset_name))
     engine.create_many(assets)
 
     # Create paths
     _paths = list()
     for asset, path in zip(assets, paths):
         short_path = path.replace(root_path, '').lstrip('/').rsplit('/', 1)[0]
-        _paths.append(PathModel(asset.id, path, short_path))
+        _paths.append(PathEntity(asset.id, path, short_path))
     engine.create_many(_paths)
 
     # Create tags
     _tags = engine.select(Query('tag', name='new'))
     if not _tags:
         LOG.info('Creating "new" tag.')
-        tag = TagModel('new')
+        tag = TagEntity('new')
         engine.create(tag)
     else:
         tag = _tags[0]
 
     tags_to_assets = list()
     for asset in assets:
-        tags_to_assets.append(TagToAssetModel(asset.id, tag.id))
+        tags_to_assets.append(TagToAssetEntity(asset.id, tag.id))
     engine.create_many(tags_to_assets)
 
     return True

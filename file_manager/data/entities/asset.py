@@ -1,14 +1,14 @@
 import os
 
 from file_manager.config import settings
-from file_manager.data.base_model import BaseModel
+from file_manager.data.base_entity import BaseEntity
 from file_manager.data.connection import get_engine
 from file_manager.data.field import Field
-from file_manager.data.models.tag_to_asset import TagToAssetModel
+from file_manager.data.entities.tag_to_asset import TagToAssetEntity
 from file_manager.data.query import Query
 
 
-class AssetModel(BaseModel):
+class AssetEntity(BaseEntity):
     NAME = 'asset'
 
     name = Field(str)
@@ -38,19 +38,19 @@ class AssetModel(BaseModel):
 
         engine = get_engine()
 
-        asset = AssetModel(name=new_name)
+        asset = AssetEntity(name=new_name)
         engine.create(asset)
 
         links = engine.select(Query('tag_to_asset', asset_id=asset_ids))
         if links:
             tags = engine.select(Query('tag', id=[_.tag_id for _ in links]))
             if tags:
-                TagToAssetModel.apply_tags([asset], tags)
+                TagToAssetEntity.apply_tags([asset], tags)
 
         paths = engine.select(Query('path', asset_id=asset_ids))
         for path in paths:
             path.asset_id = asset.id
             engine.update(path)
 
-        AssetModel.delete(asset_records)
+        AssetEntity.delete(asset_records)
         return asset

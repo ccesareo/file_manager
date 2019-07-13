@@ -1,17 +1,17 @@
-from file_manager.data.base_model import BaseModel
+from file_manager.data.base_entity import BaseEntity
 from file_manager.data.connection import get_engine
 from file_manager.data.field import Field
 from file_manager.data.query import Query
 
 
-class TagToAssetModel(BaseModel):
+class TagToAssetEntity(BaseEntity):
     NAME = 'tag_to_asset'
 
     tag_id = Field(int)
     asset_id = Field(int)
 
     def __init__(self, asset_id, tag_id, **kwargs):
-        super(TagToAssetModel, self).__init__(**kwargs)
+        super(TagToAssetEntity, self).__init__(**kwargs)
 
         self.asset_id = asset_id
         self.tag_id = tag_id
@@ -30,12 +30,12 @@ class TagToAssetModel(BaseModel):
         if not all_pairs:
             return
 
-        models = list()
+        entities = list()
         for asset_id, tag_id in all_pairs:
-            models.append(TagToAssetModel(asset_id, tag_id))
+            entities.append(TagToAssetEntity(asset_id, tag_id))
 
         engine = get_engine()
-        engine.create_many(models)
+        engine.create_many(entities)
 
     @classmethod
     def remove_tags(cls, asset_records, tag_records):

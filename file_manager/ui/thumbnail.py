@@ -15,7 +15,7 @@ from file_manager.ui.widgets.asset_menu import AssetEditMenu
 
 class FileManagerThumbnail(QWidget):
     REF_WIDTH = 200
-    APP_CACHE = dict()  # dict[type,file_manager.data.models.application.ApplicationModel]
+    APP_CACHE = dict()  # dict[type,file_manager.data.entities.application.ApplicationEntity]
 
     deleted = Signal()
 
@@ -41,8 +41,8 @@ class FileManagerThumbnail(QWidget):
 
     def __init__(self, asset_record, tag_records, path_records, *args, **kwargs):
         """
-        :type asset_record: file_manager.data.models.asset.AssetModel
-        :type path_records: list[file_manager.data.models.path.PathModel]
+        :type asset_record: file_manager.data.entities.asset.AssetEntity
+        :type path_records: list[file_manager.data.entities.path.PathEntity]
         """
         super(FileManagerThumbnail, self).__init__(*args, **kwargs)
 
@@ -189,7 +189,7 @@ class FileManagerThumbnail(QWidget):
 class AppButton(QPushButton):
     def __init__(self, path_record, app_pix):
         """
-        :type path_record: file_manager.data.models.path.PathModel
+        :type path_record: file_manager.data.entities.path.PathEntity
         """
         super(AppButton, self).__init__()
 

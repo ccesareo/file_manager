@@ -7,94 +7,94 @@ import psycopg2.extras
 from file_manager.config import settings, VERSION, LOG
 from file_manager.data.base_engine import BaseEngine
 from file_manager.data.field import Field
-from file_manager.data.models import find_model
+from file_manager.data.entities import find_entity
 from file_manager.data.query import Query
 
 
 class PsycoPGEngine(BaseEngine):
     @classmethod
-    def setup_model(cls, model_class):
+    def setup_entity(cls, entity_class):
         """
-        :type model_class: Type[BaseModel]
+        :type entity_class: Type[BaseEntity]
         """
-        assert model_class.NAME is not None, 'Model %s does not have a NAME.' % model_class
+        assert entity_class.NAME is not None, 'Entity %s does not have a NAME.' % entity_class
 
         conn = PsycoPGEngine._connect()
         cursor = conn.cursor()
         try:
-            cursor.execute('CREATE TABLE "%s" (id SERIAL PRIMARY KEY NOT NULL);' % model_class.NAME)
+            cursor.execute('CREATE TABLE "%s" (id SERIAL PRIMARY KEY NOT NULL);' % entity_class.NAME)
         except psycopg2.ProgrammingError as e:
             if 'already exists' in str(e):
-                LOG.debug('Table %s already exists.' % model_class.NAME)
+                LOG.debug('Table %s already exists.' % entity_class.NAME)
             else:
                 raise
 
-        for field in model_class.fields():
+        for field in entity_class.fields():
             if not isinstance(field, Field) or field.name == 'id':
                 continue
             try:
-                cursor.execute('ALTER TABLE "%s" ADD COLUMN "%s" %s;' % (model_class.NAME, field.name,
+                cursor.execute('ALTER TABLE "%s" ADD COLUMN "%s" %s;' % (entity_class.NAME, field.name,
                                                                          PsycoPGEngine._map_type(field.type)))
             except psycopg2.ProgrammingError as e:
                 if 'already exists' in str(e):
-                    LOG.debug('Column %s.%s already exists.' % (model_class.NAME, field.name))
+                    LOG.debug('Column %s.%s already exists.' % (entity_class.NAME, field.name))
                 else:
                     raise
 
     @classmethod
-    def create(cls, model):
+    def create(cls, entity):
         """
-        :type model: file_manager.data.base_model.BaseModel
-        :param model: Populated model to make an entry for
+        :type entity: file_manager.data.base_entity.BaseEntity
+        :param entity: Populated entity to make an entry for
         """
-        assert model.id is None, 'Record [%s] already created.' % model.id
+        assert entity.id is None, 'Record [%s] already created.' % entity.id
 
-        fields = model.fields()
+        fields = entity.fields()
         columns = [field.name for field in fields if field.name != 'id']
 
-        data = model.data()
+        data = entity.data()
         data['timestamp'] = datetime.datetime.now()
         data.pop('id', None)
         for k, v in data.items():
             data[k] = str(v) if v not in (0, None, '') else None
 
-        model_values = [data[k] for k in columns]
+        entity_values = [data[k] for k in columns]
 
         values = ('%s,' * len(columns)).rstrip(',')
-        statement = "INSERT INTO %s(%s) VALUES (%s) RETURNING *" % (model.NAME, ', '.join(columns), values)
+        statement = "INSERT INTO %s(%s) VALUES (%s) RETURNING *" % (entity.NAME, ', '.join(columns), values)
         conn = PsycoPGEngine._connect()
         try:
             cursor = conn.cursor()
-            LOG.debug(cursor.mogrify(statement, model_values))
-            cursor.execute(statement, model_values)
+            LOG.debug(cursor.mogrify(statement, entity_values))
+            cursor.execute(statement, entity_values)
             new_data = cursor.fetchall()[0]
             # Apply new data
             for k, v in new_data.items():
-                setattr(model, k, v)
-            model.clear_changes()
+                setattr(entity, k, v)
+            entity.clear_changes()
         finally:
             conn.close()
 
     @classmethod
-    def create_many(cls, models):
-        assert all(x.id is None for x in models), 'Some models already exist.'
+    def create_many(cls, entities):
+        assert all(x.id is None for x in entities), 'Some entities already exist.'
 
-        model_name = models[0].NAME
-        columns = [field.name for field in models[0].fields() if field.name != 'id']
+        entity_name = entities[0].NAME
+        columns = [field.name for field in entities[0].fields() if field.name != 'id']
 
         all_values = list()
-        for model in models:
-            _data = model.data()
+        for entity in entities:
+            _data = entity.data()
             _data['timestamp'] = datetime.datetime.now()
             _data.pop('id', None)
             for k, v in _data.items():
                 _data[k] = str(v) if v not in (0, None, '') else None
-            model_values = [_data[k] for k in columns]
-            all_values.extend(model_values)
+            entity_values = [_data[k] for k in columns]
+            all_values.extend(entity_values)
 
         _arg_string = ('%s,' * len(columns)).rstrip(',')
-        values = ['(%s)' % _arg_string] * len(models)
-        statement = "INSERT INTO %s(%s) VALUES %s RETURNING *" % (model_name, ', '.join(columns), ','.join(values))
+        values = ['(%s)' % _arg_string] * len(entities)
+        statement = "INSERT INTO %s(%s) VALUES %s RETURNING *" % (entity_name, ', '.join(columns), ','.join(values))
         conn = PsycoPGEngine._connect()
         try:
             cursor = conn.cursor()
@@ -103,10 +103,10 @@ class PsycoPGEngine(BaseEngine):
             new_records = cursor.fetchall()
 
             # Apply new data
-            for model, data in zip(models, new_records):
+            for entity, data in zip(entities, new_records):
                 for k, v in data.items():
-                    setattr(model, k, v)
-                model.clear_changes()
+                    setattr(entity, k, v)
+                entity.clear_changes()
         finally:
             conn.close()
 
@@ -114,10 +114,10 @@ class PsycoPGEngine(BaseEngine):
     def select(cls, query):
         """
         :type query: file_manager.data.query.Query
-        :rtype: list[file_manager.data.base_model.BaseModel]
+        :rtype: list[file_manager.data.base_entity.BaseEntity]
         """
         statement = query.build_query(query.DBLANG.POSTGRES)
-        model = find_model(query.table())
+        entity = find_entity(query.table())
 
         conn = PsycoPGEngine._connect()
         try:
@@ -126,26 +126,26 @@ class PsycoPGEngine(BaseEngine):
             cursor.execute(statement)
             result = cursor.fetchall()
             LOG.debug('%s - Found %d records.' % (cursor.mogrify(statement), len(result)))
-            return [model(**r) for r in result]
+            return [entity(**r) for r in result]
         finally:
             conn.close()
 
     @classmethod
-    def update(cls, model):
+    def update(cls, entity):
         """
-        :type model: BaseModel
+        :type entity: BaseEntity
         :rtype: list[dict[str,variant]]
         """
-        assert model.id is not None, 'Record has not been created.'
+        assert entity.id is not None, 'Record has not been created.'
 
-        changes = model.changes()
+        changes = entity.changes()
         columns = changes.keys()
         values = changes.values()
         values = [str(v) if v not in (0, None, '') else None for v in values]
 
         set_data = ['"%s"=%%s' % column for column in columns]
 
-        statement = "UPDATE %s SET %s WHERE id=%s RETURNING *" % (model.NAME, ', '.join(set_data), model.id)
+        statement = "UPDATE %s SET %s WHERE id=%s RETURNING *" % (entity.NAME, ', '.join(set_data), entity.id)
         conn = PsycoPGEngine._connect()
         try:
             cursor = conn.cursor()
@@ -154,45 +154,45 @@ class PsycoPGEngine(BaseEngine):
             new_data = cursor.fetchall()[0]
             # Apply new data
             for k, v in new_data.items():
-                setattr(model, k, v)
-            model.clear_changes()
+                setattr(entity, k, v)
+            entity.clear_changes()
         finally:
             conn.close()
 
     @classmethod
-    def update_many(cls, models):
+    def update_many(cls, entities):
         """
-        :type models: list[BaseModel]
+        :type entities: list[BaseEntity]
         :rtype: list[dict[str,variant]]
         """
-        assert all(x.id is not None for x in models), 'Some models have not been created.'
+        assert all(x.id is not None for x in entities), 'Some entities have not been created.'
 
-        models = models[:]
-        models.sort(key=attrgetter('id'))
-        model_name = models[0].NAME
+        entities = entities[:]
+        entities.sort(key=attrgetter('id'))
+        entity_name = entities[0].NAME
 
         cmd_value_pairs = list()
-        for model in models:
-            changes = model.changes()
+        for entity in entities:
+            changes = entity.changes()
             columns = changes.keys()
             values = changes.values()
             values = [str(v) if v not in (0, None, '') else None for v in values]
 
             set_data = ['"%s"=%%s' % column for column in columns]
 
-            columns = [field.name for field in models[0].fields() if field.name != 'id']
+            columns = [field.name for field in entities[0].fields() if field.name != 'id']
 
             all_values = list()
-            for _model in models:
-                _data = _model.data()
+            for _entity in entities:
+                _data = _entity.data()
                 _data['timestamp'] = datetime.datetime.now()
                 _data.pop('id', None)
                 for k, v in _data.items():
                     _data[k] = str(v) if v not in (0, None, '') else None
-                model_values = [_data[k] for k in columns]
-                all_values.extend(model_values)
+                entity_values = [_data[k] for k in columns]
+                all_values.extend(entity_values)
 
-            statement = "UPDATE %s SET %s WHERE id=%s;" % (model_name, ', '.join(set_data), model.id)
+            statement = "UPDATE %s SET %s WHERE id=%s;" % (entity_name, ', '.join(set_data), entity.id)
             cmd_value_pairs.append((statement, values))
 
         conn = PsycoPGEngine._connect()
@@ -205,20 +205,20 @@ class PsycoPGEngine(BaseEngine):
                 LOG.debug(statement)
             cursor.execute('\n'.join(statements))
 
-            refresh_records = PsycoPGEngine.select(Query(model_name, id=[_.id for _ in models]))
+            refresh_records = PsycoPGEngine.select(Query(entity_name, id=[_.id for _ in entities]))
             refresh_records.sort(key=attrgetter('id'))
 
-            assert len(models) == len(refresh_records), 'Updated model count does not match refresh count.'
+            assert len(entities) == len(refresh_records), 'Updated entity count does not match refresh count.'
 
             # Apply new data
-            for model, new_model in zip(models, refresh_records):
-                for k, v in new_model.data():
-                    setattr(model, k, v)
-                model.clear_changes()
+            for entity, new_entity in zip(entities, refresh_records):
+                for k, v in new_entity.data():
+                    setattr(entity, k, v)
+                entity.clear_changes()
         finally:
             conn.close()
 
-        # statement = "UPDATE %s SET %s WHERE id=%s RETURNING *" % (model.NAME, ', '.join(set_data), model.id)
+        # statement = "UPDATE %s SET %s WHERE id=%s RETURNING *" % (entity.NAME, ', '.join(set_data), entity.id)
         # conn = PsycoPGEngine._connect()
         # try:
         #     cursor = conn.cursor()
@@ -227,53 +227,53 @@ class PsycoPGEngine(BaseEngine):
         #     new_data = cursor.fetchall()[0]
         #     # Apply new data
         #     for k, v in new_data.items():
-        #         setattr(model, k, v)
-        #     model.clear_changes()
+        #         setattr(entity, k, v)
+        #     entity.clear_changes()
         # finally:
         #     conn.close()
 
     @classmethod
-    def delete(cls, model):
+    def delete(cls, entity):
         """
-        :type model: BaseModel
+        :type entity: BaseEntity
         """
-        assert model.id is not None, 'Record has not been created.'
+        assert entity.id is not None, 'Record has not been created.'
 
-        statement = "DELETE FROM %s WHERE id=%s" % (model.NAME, model.id)
+        statement = "DELETE FROM %s WHERE id=%s" % (entity.NAME, entity.id)
         conn = PsycoPGEngine._connect()
         try:
             cursor = conn.cursor()
             LOG.debug(cursor.mogrify(statement))
             cursor.execute(statement)
-            model.id = None
-            model.clear_changes()
+            entity.id = None
+            entity.clear_changes()
         finally:
             conn.close()
 
     @classmethod
-    def delete_many(cls, models):
+    def delete_many(cls, entities):
         """
-        :type models: list[BaseModel]
+        :type entities: list[BaseEntity]
         """
-        if not models:
+        if not entities:
             return
 
-        assert all(x.id is not None for x in models), 'Some models have not been created.'
+        assert all(x.id is not None for x in entities), 'Some entities have not been created.'
 
-        if len(models) > 1:
-            ids = tuple([_.id for _ in models])
-            statement = "DELETE FROM %s WHERE id in %s" % (models[0].NAME, str(ids))
+        if len(entities) > 1:
+            ids = tuple([_.id for _ in entities])
+            statement = "DELETE FROM %s WHERE id in %s" % (entities[0].NAME, str(ids))
         else:
-            statement = "DELETE FROM %s WHERE id = %s" % (models[0].NAME, models[0].id)
+            statement = "DELETE FROM %s WHERE id = %s" % (entities[0].NAME, entities[0].id)
 
         conn = PsycoPGEngine._connect()
         try:
             cursor = conn.cursor()
             LOG.debug(cursor.mogrify(statement))
             cursor.execute(statement)
-            for model in models:
-                model.id = None
-                model.clear_changes()
+            for entity in entities:
+                entity.id = None
+                entity.clear_changes()
         finally:
             conn.close()
 

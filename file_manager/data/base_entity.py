@@ -6,7 +6,7 @@ from file_manager.data.connection import get_engine
 from file_manager.data.field import Field
 
 
-class BaseModel(object):
+class BaseEntity(object):
     NAME = None  # Name of table
     id = Field(int)
     timestamp = Field(datetime.datetime)
@@ -44,7 +44,7 @@ class BaseModel(object):
 
     def __setattr__(self, key, value):
         old_value = getattr(self.__class__, key, None)
-        super(BaseModel, self).__setattr__(key, value)
+        super(BaseEntity, self).__setattr__(key, value)
 
         attr = getattr(self.__class__, key, None)
         if isinstance(attr, Field):

@@ -8,19 +8,19 @@ from file_manager.ui.widgets.dialogs import ask
 
 
 class TableEditor(QDialog):
-    def __init__(self, model_class, allow_create=False, *args, **kwargs):
+    def __init__(self, entity_class, allow_create=False, *args, **kwargs):
         """
-        :type model_class: file_manager.data.base_model.BaseModel
+        :type entity_class: file_manager.data.base_entity.BaseEntity
         """
         super(TableEditor, self).__init__(*args, **kwargs)
 
-        self._model = model_class
+        self._entity = entity_class
         self._allow_create = allow_create
         self._tree = QTreeWidget()
-        self._columns = [field.name for field in self._model.fields()
+        self._columns = [field.name for field in self._entity.fields()
                          if field.name not in ('id', 'timestamp', 'username')]
 
-        self._btn_add = QPushButton('Create %s' % model_class.NAME.title())
+        self._btn_add = QPushButton('Create %s' % entity_class.NAME.title())
 
         self._build_ui()
         self._build_connections()
@@ -45,7 +45,7 @@ class TableEditor(QDialog):
                 i = self._tree.indexOfTopLevelItem(item)
                 self._tree.takeTopLevelItem(i)
 
-            self._model.delete(list(records))
+            self._entity.delete(list(records))
 
     def _build_ui(self):
         self._tree.setRootIsDecorated(False)
@@ -73,7 +73,7 @@ class TableEditor(QDialog):
         self._tree.setEditTriggers(QTreeWidget.DoubleClicked)
 
     def _create_record(self):
-        editor = RecordCreation(self._model, parent=self)
+        editor = RecordCreation(self._entity, parent=self)
         if editor.exec_():
             new_record = editor.new_record
             self._add_row(new_record)
@@ -86,7 +86,7 @@ class TableEditor(QDialog):
         get_engine().update(record)
 
     def _populate(self):
-        query = Query(self._model.NAME)
+        query = Query(self._entity.NAME)
 
         engine = get_engine()
         result = engine.select(query)
@@ -106,10 +106,10 @@ class TableEditor(QDialog):
 
 
 class RecordCreation(QDialog):
-    def __init__(self, model, *args, **kwargs):
+    def __init__(self, entity, *args, **kwargs):
         super(RecordCreation, self).__init__(*args, **kwargs)
 
-        self._model = model
+        self._entity = entity
 
         self.new_record = None
 
@@ -123,7 +123,7 @@ class RecordCreation(QDialog):
         self._setup_ui()
 
     def _build_ui(self):
-        fields = self._model.fields()
+        fields = self._entity.fields()
         fields = [x for x in fields if x.name not in ('id', 'timestamp', 'username')]
 
         lyt_buttons = QHBoxLayout()
@@ -153,7 +153,7 @@ class RecordCreation(QDialog):
         self._btn_create.clicked.connect(self._create_record)
 
     def _setup_ui(self):
-        self.setWindowTitle('%s Creation' % self._model.NAME.title())
+        self.setWindowTitle('%s Creation' % self._entity.NAME.title())
         self.setMinimumWidth(300)
 
     def _create_record(self):
@@ -166,17 +166,17 @@ class RecordCreation(QDialog):
                 value = wdg.text()
             data[column] = value
 
-        self.new_record = self._model(**data)
+        self.new_record = self._entity(**data)
         get_engine().create(self.new_record)
 
         self.accept()
 
 
 if __name__ == '__main__':
-    from file_manager.data.models.tag import TagModel
+    from file_manager.data.entities.tag import TagEntity
 
     app = QApplication([])
-    ui = TableEditor(TagModel)
+    ui = TableEditor(TagEntity)
     ui.resize(1200, 900)
     ui.show()
     app.exec_()

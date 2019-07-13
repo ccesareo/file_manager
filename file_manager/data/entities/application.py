@@ -1,8 +1,8 @@
-from file_manager.data.base_model import BaseModel
+from file_manager.data.base_entity import BaseEntity
 from file_manager.data.field import Field
 
 
-class ApplicationModel(BaseModel):
+class ApplicationEntity(BaseEntity):
     NAME = 'application'
 
     name = Field(str)
@@ -17,7 +17,7 @@ class ApplicationModel(BaseModel):
         :type file_type: str
         :param file_type: File type to associate
         """
-        super(ApplicationModel, self).__init__(**kwargs)
+        super(ApplicationEntity, self).__init__(**kwargs)
 
         self.name = name
         self.file_type = file_type

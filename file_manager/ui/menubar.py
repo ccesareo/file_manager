@@ -2,8 +2,8 @@ from Qt.QtCore import Signal
 from Qt.QtWidgets import QMenuBar
 
 from file_manager.data.connection import get_engine
-from file_manager.data.models import TagModel, AssetModel
-from file_manager.data.models.application import ApplicationModel
+from file_manager.data.entities import TagEntity, AssetEntity
+from file_manager.data.entities.application import ApplicationEntity
 from file_manager.data.query import Query
 from file_manager.ui.importer import AssetImporter
 from file_manager.ui.table_editor import TableEditor
@@ -27,13 +27,13 @@ class FileManagerMenu(QMenuBar):
         self.super_menu.addAction('Clear Database', self._clear_database)
 
     def _manage_tags(self):
-        editor = TableEditor(TagModel, allow_create=True, parent=self)
+        editor = TableEditor(TagEntity, allow_create=True, parent=self)
         editor.setWindowTitle('Tag Manager')
         editor.resize(1200, 600)
         editor.exec_()
 
     def _manage_apps(self):
-        editor = TableEditor(ApplicationModel, allow_create=True, parent=self)
+        editor = TableEditor(ApplicationEntity, allow_create=True, parent=self)
         editor.setWindowTitle('Application Manager')
         editor.resize(1200, 600)
         editor.exec_()
@@ -44,7 +44,7 @@ class FileManagerMenu(QMenuBar):
 
         engine = get_engine()
 
-        AssetModel.delete(engine.select(Query('asset')))
+        AssetEntity.delete(engine.select(Query('asset')))
         engine.delete_many(engine.select(Query('tag')))
 
         self.database_cleared.emit()

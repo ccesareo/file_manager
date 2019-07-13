@@ -1,7 +1,8 @@
-from Qt.QtWidgets import QApplication
+from .config import settings
+from .ui import FileManagerApp
+from .ui.style import apply_default_color_scheme
 
-from file_manager.config import settings
-from file_manager.ui import FileManagerApp
+# TODO - sha1 files so they can be remapped to new locations if moved
 
 
 def set_file_action(action_name, action_callback, filetypes):
@@ -11,12 +12,3 @@ def set_file_action(action_name, action_callback, filetypes):
     :param filetypes: List of filetypes to apply action to
     """
     settings.set_file_action(action_name, action_callback, filetypes)
-
-
-if __name__ == '__main__':
-    app = QApplication([])
-    ui = FileManagerApp()
-    settings.main_ui = ui
-    ui.resize(1600, 900)
-    ui.show()
-    app.exec_()

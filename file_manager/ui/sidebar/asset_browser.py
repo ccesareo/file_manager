@@ -10,12 +10,12 @@ from file_manager.data.query import Query
 from file_manager.ui.widgets.asset_menu import AssetEditMenu
 
 
-class FileManagerBrowser(QWidget):
+class AssetBrowser(QWidget):
     assets_selected = Signal(list)
     tags_updated = Signal()
 
     def __init__(self, *args, **kwargs):
-        super(FileManagerBrowser, self).__init__(*args, **kwargs)
+        super(AssetBrowser, self).__init__(*args, **kwargs)
 
         self._tree = QTreeWidget()
         self._timer_selection = QTimer()
@@ -101,7 +101,6 @@ class FileManagerBrowser(QWidget):
         lyt_main.setSpacing(0)
         lyt_main.addWidget(self._tree)
         self.setLayout(lyt_main)
-        self.setFixedWidth(400)
 
     def _build_connections(self):
         self._tree.itemSelectionChanged.connect(self._timer_selection.start)

@@ -1,8 +1,8 @@
 from Qt.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
 
 from file_manager.config import VERSION
-from file_manager.ui.browser import FileManagerBrowser
 from file_manager.ui.menubar import FileManagerMenu
+from file_manager.ui.sidebar import SideBarBrowser
 from file_manager.ui.toolbar import FileManagerToolbar
 from file_manager.ui.viewer import FileManagerViewer
 
@@ -12,7 +12,7 @@ class FileManagerApp(QMainWindow):
         super(FileManagerApp, self).__init__(*args, **kwargs)
 
         self._toolbar = FileManagerToolbar(self)
-        self._browser = FileManagerBrowser(self)
+        self._browser = SideBarBrowser(self)
         self._viewer = FileManagerViewer(self)
 
         self._build_ui()
