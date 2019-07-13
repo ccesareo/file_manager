@@ -1,4 +1,4 @@
-from ...data.base_entity import BaseEntity
+from .base_entity import BaseEntity
 from ...data.entities.asset import AssetEntity
 from ...data.entities.path import PathEntity
 from ...data.entities.tag import TagEntity

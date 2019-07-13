@@ -1,4 +1,4 @@
-from ...data.base_entity import BaseEntity
+from .base_entity import BaseEntity
 from ...data.field import Field
 
 

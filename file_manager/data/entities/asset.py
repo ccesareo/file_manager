@@ -1,10 +1,10 @@
 import os
 
+from .base_entity import BaseEntity
 from ...config import settings
-from ...data.base_entity import BaseEntity
 from ...data.connection import get_engine
-from ...data.field import Field
 from ...data.entities.tag_to_asset import TagToAssetEntity
+from ...data.field import Field
 from ...data.query import Query
 
 

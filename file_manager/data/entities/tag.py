@@ -1,6 +1,6 @@
 import random
 
-from ...data.base_entity import BaseEntity
+from .base_entity import BaseEntity
 from ...data.connection import get_engine
 from ...data.field import Field
 from ...data.query import Query
