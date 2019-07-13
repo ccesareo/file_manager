@@ -3,7 +3,7 @@ from ..config import settings
 
 def get_engine():
     """
-    :rtype: file_manager.data.base_engine.BaseEngine
+    :rtype: file_manager.data.engines.base_engine.BaseEngine
     """
     engine_name = settings.db_engine
     if engine_name == 'postgresql':

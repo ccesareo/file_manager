@@ -30,4 +30,3 @@ class BaseEngine(object):
     @classmethod
     def delete_many(cls, entities):
         raise NotImplementedError()
-

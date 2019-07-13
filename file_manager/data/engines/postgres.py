@@ -4,10 +4,10 @@ from operator import attrgetter
 import psycopg2
 import psycopg2.extras
 
+from .base_engine import BaseEngine
 from ...config import settings, VERSION, LOG
-from ...data.base_engine import BaseEngine
-from ...data.field import Field
 from ...data.entities import find_entity
+from ...data.field import Field
 from ...data.query import Query
 
 
