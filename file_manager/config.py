@@ -4,7 +4,7 @@ import os
 from collections import defaultdict
 
 
-VERSION = 'v0.0.1'
+VERSION = 'v0.0.2'
 
 logging.basicConfig(format='%%(asctime)s (%s) [%%(levelname)s] %%(message)s' % VERSION, datefmt='%Y-%m-%d %H:%M:%S')
 LOG = logging.getLogger('FileManager')
@@ -32,16 +32,14 @@ class _Settings(object):
 
         self._load_settings()
 
-    def set_file_action(self, action_name, action_callback, filetypes):
-        for filetype in filetypes:
-            self.file_actions[filetype][action_name] = action_callback
-
+    @property
     def thumbs_folder(self):
         if os.name == 'nt':
             assert self.thumbnail_folder_win, 'No thumbnail_folder_win set in settings.'
             return self.thumbnail_folder_win
         raise Exception('Only windows thumbnail folder has been defined.')
 
+    @property
     def icons_folder(self):
         if os.name == 'nt':
             return self.app_icons_win

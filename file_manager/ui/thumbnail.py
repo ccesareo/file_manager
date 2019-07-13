@@ -2,29 +2,25 @@ import os
 import re
 import subprocess
 
-from Qt.QtCore import Qt, Signal
-from Qt.QtGui import QCursor, QFont, QPixmap, QIcon
-from Qt.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QInputDialog, QMenu, \
-    QApplication
-
+from Qt import QtCore, QtGui, QtWidgets
 from ..config import settings
 from ..data.connection import get_engine
 from ..data.query import Query
 from ..ui.widgets.asset_menu import AssetEditMenu
 
 
-class FileManagerThumbnail(QWidget):
+class FileManagerThumbnail(QtWidgets.QFrame):
     REF_WIDTH = 200
     APP_CACHE = dict()  # dict[type,file_manager.data.entities.application.ApplicationEntity]
 
-    deleted = Signal()
+    deleted = QtCore.Signal()
 
     @staticmethod
     def cache_app_icons():
         """
         Call before populating thumbnail viewer
         """
-        icons_folder = settings.icons_folder()
+        icons_folder = settings.icons_folder
         if not icons_folder:
             return
 
@@ -37,7 +33,7 @@ class FileManagerThumbnail(QWidget):
             if not os.path.isfile(path):
                 continue
 
-            FileManagerThumbnail.APP_CACHE[app.file_type] = QPixmap(path).scaledToHeight(30)
+            FileManagerThumbnail.APP_CACHE[app.file_type] = QtGui.QPixmap(path).scaledToHeight(30)
 
     def __init__(self, asset_record, tag_records, path_records, *args, **kwargs):
         """
@@ -50,10 +46,10 @@ class FileManagerThumbnail(QWidget):
         self.tag_records = tag_records[:]
         self.path_records = path_records[:]
 
-        self._lbl_title = QLabel(asset_record.name.replace('_', ' '))
-        self._thumb = QLabel('Placeholder')
-        self._lyt_tags = QVBoxLayout()
-        self._btn_menu = QPushButton('...')
+        self._lbl_title = QtWidgets.QLabel(asset_record.name.replace('_', ' '))
+        self._thumb = QtWidgets.QLabel('---')
+        self._lyt_tags = QtWidgets.QVBoxLayout()
+        self._btn_menu = QtWidgets.QPushButton('...')
 
         self._build_ui()
         self._build_connections()
@@ -61,7 +57,7 @@ class FileManagerThumbnail(QWidget):
 
     def update_thumb_size(self):
         size = settings.thumb_size * FileManagerThumbnail.REF_WIDTH / 100.0
-        self.setFixedWidth(size)
+        self.setFixedWidth(size + 12)
         self.setMinimumHeight(size + 50)
 
         height = size / (4.0 / 3)
@@ -72,25 +68,25 @@ class FileManagerThumbnail(QWidget):
             self._thumb.setText(re.sub('height=\d+', 'height=%d' % height, lbl))
 
     def _build_ui(self):
-        _app_icons = QHBoxLayout()
-        _app_icons.setAlignment(Qt.AlignLeft)
+        _app_icons = QtWidgets.QHBoxLayout()
+        _app_icons.setAlignment(QtCore.Qt.AlignLeft)
         _app_icons.setContentsMargins(0, 0, 0, 0)
         _app_icons.setSpacing(0)
         for path_record in self.path_records:
             app_pix = FileManagerThumbnail.APP_CACHE.get(path_record.type)
             _app_icons.addWidget(AppButton(path_record, app_pix))
 
-        lyt_bottom = QHBoxLayout()
+        lyt_bottom = QtWidgets.QHBoxLayout()
         lyt_bottom.setContentsMargins(0, 0, 0, 0)
         lyt_bottom.setSpacing(4)
         lyt_bottom.addLayout(_app_icons)
         lyt_bottom.addStretch()
         lyt_bottom.addWidget(self._btn_menu)
 
-        lyt_main = QVBoxLayout()
-        lyt_main.setContentsMargins(0, 0, 0, 0)
+        lyt_main = QtWidgets.QVBoxLayout()
+        lyt_main.setContentsMargins(5, 5, 5, 5)
         lyt_main.setSpacing(4)
-        lyt_main.setAlignment(Qt.AlignTop)
+        lyt_main.setAlignment(QtCore.Qt.AlignTop)
         lyt_main.addWidget(self._lbl_title)
         lyt_main.addWidget(self._thumb)
         lyt_main.addLayout(lyt_bottom)
@@ -101,11 +97,13 @@ class FileManagerThumbnail(QWidget):
         self._btn_menu.clicked.connect(self._show_menu)
 
     def _setup_ui(self):
-        # self.setStyleSheet("QWidget {background-color: rgb(30, 30, 30);}")
+        self.setFrameStyle(QtCore.Qt.SolidLine)
 
-        self._lbl_title.setFont(QFont('Calibri', 12))
+        self._thumb.setAlignment(QtCore.Qt.AlignCenter)
+
+        self._lbl_title.setFont(QtGui.QFont('Calibri', 14, QtGui.QFont.Bold))
         self._lbl_title.setFixedHeight(35)
-        self._lbl_title.setAlignment(Qt.AlignCenter)
+        self._lbl_title.setAlignment(QtCore.Qt.AlignCenter)
         self._lbl_title.setWordWrap(True)
         # self._lbl_title.setStyleSheet(
         #     """
@@ -126,20 +124,20 @@ class FileManagerThumbnail(QWidget):
         self._update_thumbnail()
 
     def _edit_title(self, *args):
-        new_text, ok = QInputDialog.getText(self, 'New Title', 'Title:')
+        new_text, ok = QtWidgets.QInputDialog.getText(self, 'New Title', 'Title:', text=self.asset_record.name)
         if not ok:
             return
 
         self.asset_record.name = new_text
         get_engine().update(self.asset_record)
-        self._lbl_title.setText(self.asset_record.name)
+        self._lbl_title.setText(new_text)
 
     def _show_menu(self):
         menu = AssetEditMenu([self.asset_record], parent=self)
         menu.assets_deleted.connect(self.deleted.emit)
         menu.thumbnail_updated.connect(self._update_thumbnail)
         menu.tags_updated.connect(self._update_tags)
-        menu.exec_(QCursor.pos())
+        menu.exec_(QtGui.QCursor.pos())
 
     def _update_thumbnail(self):
         if not self.asset_record.thumbnail:
@@ -149,7 +147,7 @@ class FileManagerThumbnail(QWidget):
                     self.update_thumb_size()
                     return
 
-        thumbs_folder = settings.thumbs_folder()
+        thumbs_folder = settings.thumbs_folder
         if not thumbs_folder or not self.asset_record.thumbnail:
             return
 
@@ -175,18 +173,18 @@ class FileManagerThumbnail(QWidget):
                 self.tag_records = engine.select(Query('tag', id=tag_ids))
 
         for tag_record in self.tag_records:
-            lbl = QLabel(tag_record.name)
-            lbl.setAlignment(Qt.AlignCenter)
+            lbl = QtWidgets.QLabel(tag_record.name)
+            lbl.setAlignment(QtCore.Qt.AlignCenter)
             # lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
             lbl.setFixedHeight(20)
 
             font = lbl.font()
-            font.setPointSize(14)
+            font.setPointSize(12)
             lbl.setFont(font)
             self._lyt_tags.addWidget(lbl)
 
 
-class AppButton(QPushButton):
+class AppButton(QtWidgets.QPushButton):
     def __init__(self, path_record, app_pix):
         """
         :type path_record: file_manager.data.entities.path.PathEntity
@@ -200,15 +198,15 @@ class AppButton(QPushButton):
         self.clicked.connect(self._open_application)
 
         if app_pix:
-            self.setIcon(QIcon(app_pix))
+            self.setIcon(QtGui.QIcon(app_pix))
         else:
             self.setText(path_record.type)
 
     def mouseReleaseEvent(self, event):
         super(AppButton, self).mouseReleaseEvent(event)
 
-        if event.button() == Qt.RightButton:
-            menu = QMenu()
+        if event.button() == QtCore.Qt.RightButton:
+            menu = QtWidgets.QMenu()
             menu.addAction('Copy Path', self._copy_to_clipboard)
             menu.addAction('Open Directory', self._open_directory)
 
@@ -218,7 +216,7 @@ class AppButton(QPushButton):
                 for action, callback in sorted(settings.file_actions[t].items()):
                     menu.addAction(action, lambda: callback(self.record.filepath))
 
-            menu.exec_(QCursor.pos())
+            menu.exec_(QtGui.QCursor.pos())
 
     def _find_app(self):
         apps = get_engine().select(Query('application', file_type=self.record.type))
@@ -235,7 +233,7 @@ class AppButton(QPushButton):
         os.startfile(self.record.filepath)
 
     def _copy_to_clipboard(self):
-        cb = QApplication.clipboard()
+        cb = QtWidgets.QApplication.clipboard()
         cb.setText(self.record.filepath)
 
     def _open_directory(self):

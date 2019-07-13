@@ -17,26 +17,20 @@ class FileManagerViewer(QWidget):
 
         self._lyt_grid = QGridLayout()
         self._toolbar = ViewerToolbar()
-        self._asset_names = list()
 
         self._build_ui()
         self._build_connections()
         self._setup_ui()
 
-    def refresh(self):
-        self.view_assets(self._asset_names)
-
-    def view_assets(self, asset_names):
-        self._asset_names = asset_names[:]
-
+    def view_assets(self, asset_records):
         self._clear_grid()
 
-        engine = get_engine()
-        asset_records = engine.select(Query('asset', name=asset_names))
         if not asset_records:
             return
 
         asset_records.sort(key=attrgetter('name'))
+
+        engine = get_engine()
 
         # Find tags
         _links = engine.select(Query('tag_to_asset', asset_id=[_.id for _ in asset_records]))
@@ -107,7 +101,7 @@ class FileManagerViewer(QWidget):
         for wdg in widgets:
             wdg.update_thumb_size()
         w = self.width()
-        items_per_row = int(w / (settings.thumb_size * FileManagerThumbnail.REF_WIDTH / 100.0))
+        items_per_row = int(w / ((settings.thumb_size + 16) * FileManagerThumbnail.REF_WIDTH / 100.0))
         r, c = 0, 0
         while widgets:
             n = widgets.pop(0)
@@ -122,4 +116,5 @@ class FileManagerViewer(QWidget):
             item = self._lyt_grid.itemAt(0)
             wdg = item.widget()
             self._lyt_grid.removeWidget(wdg)
+            wdg.close()
             wdg.deleteLater()

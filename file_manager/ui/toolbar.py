@@ -1,29 +1,18 @@
-import traceback
-
-from Qt.QtCore import Signal, Qt, QEvent, QTimer
-from Qt.QtGui import QKeyEvent
-from Qt.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QListWidget, QApplication, QComboBox
-
+from Qt import QtCore, QtGui, QtWidgets
 from ..config import settings
-from ..data.connection import get_engine
-from ..data.query import Query
 
 
-class FileManagerToolbar(QWidget):
-    tags_changed = Signal(list)
-    assets_changed = Signal(list)
+class FileManagerToolbar(QtWidgets.QWidget):
+    tags_changed = QtCore.Signal(str)
+    assets_changed = QtCore.Signal(str)
 
     def __init__(self, *args, **kwargs):
         super(FileManagerToolbar, self).__init__(*args, **kwargs)
 
-        self._cmbo_search_type = QComboBox()
+        self._cmbo_search_type = FlatCombo(['asset', 'tag'])
+        self._edit_search = QtWidgets.QLineEdit()
 
-        self._str_names = set()
-
-        self._search_filter = _SearchFilter()
-        self._edit_search = _SearchField(self._search_filter)
-
-        self._timer_search = QTimer()
+        self._timer_search = QtCore.QTimer()
         self._timer_search.setSingleShot(True)
         self._timer_search.setInterval(settings.search_timeout)
 
@@ -32,125 +21,107 @@ class FileManagerToolbar(QWidget):
         self._setup_ui()
 
     def _build_ui(self):
-        self.setFixedHeight(25)
+        self.setFixedHeight(40)
+        self._edit_search.setFixedHeight(34)
         self._edit_search.setFixedWidth(400)
 
-        lyt_main = QHBoxLayout()
+        lyt_main = QtWidgets.QHBoxLayout()
         lyt_main.setContentsMargins(0, 0, 0, 0)
         lyt_main.setSpacing(5)
         lyt_main.addStretch()
         lyt_main.addWidget(self._cmbo_search_type)
         lyt_main.addWidget(self._edit_search)
+        lyt_main.addStretch()
         self.setLayout(lyt_main)
 
     def _build_connections(self):
         self._edit_search.textChanged.connect(self._timer_search.start)
-        self._search_filter.item_selected.connect(self._tag_selected)
-        self._cmbo_search_type.currentIndexChanged.connect(self._edit_search.clear)
 
-        self._timer_search.timeout.connect(self._update_tags)
-        self._timer_search.timeout.connect(self._update_search_filter)
+        self._cmbo_search_type.option_changed.connect(self._edit_search.clear)
+        self._cmbo_search_type.option_changed.connect(self._timer_search.start)
+
+        # TODO - emit regex
+        self._timer_search.timeout.connect(self._search_changed)
 
     def _setup_ui(self):
-        self._cmbo_search_type.addItems(['asset', 'tag'])
-
-    def _update_search_filter(self):
-        self._search_filter.clear()
-
-        labels = self._split_labels()
-        if not labels:
-            return
-
-        last_item = labels[-1]
-        if not last_item:
-            self._search_filter.hide()
-            return
-
-        q = Query(self._search_type())
-        q.add_filter('name', last_item, operator=q.OP.MATCH, match_case=False)
-        engine = get_engine()
-        try:
-            result = engine.select(q)
-        except Exception as e:
-            traceback.print_exc()
-            result = list()
-
-        if result:
-            names = [x.name for x in result]
-            names.sort()
-            self._search_filter.addItems(names)
-            self._search_filter.show()
-            pt = self._edit_search.mapToParent(self._edit_search.rect().bottomLeft())
-            pt = self.mapToGlobal(pt)
-            self._search_filter.move(pt)
-        else:
-            self._search_filter.hide()
-
-    def _update_tags(self):
-        items = self._split_labels()
-        if self._search_type() == 'tag':
-            self.tags_changed.emit(sorted(items))
-        else:
-            self.assets_changed.emit(sorted(items))
+        self._edit_search.setStyleSheet("""
+        QLineEdit {
+            border-radius: 17px;
+            font-size: 18px;
+        }
+        """)
+        self._edit_search.setAlignment(QtCore.Qt.AlignCenter)
 
     def _search_type(self):
-        return self._cmbo_search_type.currentText()
+        return self._cmbo_search_type.current_text()
 
-    def _split_labels(self):
-        s = self._edit_search.text().strip()
-        items = s.split(',')
-        items = [x.strip() for x in items if x.strip()]
-        return items
-
-    def _tag_selected(self, tag_name):
-        items = self._split_labels()
-        items[-1] = tag_name
-        self._edit_search.setText(','.join(items) + ',')
+    def _search_changed(self):
+        search_text = self._edit_search.text()
+        if self._search_type() == 'asset':
+            self.assets_changed.emit(search_text)
+        elif self._search_type() == 'tag':
+            self.tags_changed.emit(search_text)
 
 
-class _SearchField(QLineEdit):
-    def __init__(self, search_filter, *args, **kwargs):
-        """
-        :type search_filter: _SearchFilter
-        """
-        super(_SearchField, self).__init__(*args, **kwargs)
+class FlatCombo(QtWidgets.QWidget):
+    option_changed = QtCore.Signal(str)
 
-        self._search_filter = search_filter
+    def __init__(self, options, *args, **kwargs):
+        super(FlatCombo, self).__init__(*args, **kwargs)
 
-        self.installEventFilter(self)
+        assert options, 'No options given.'
 
-    def eventFilter(self, obj, event):
-        if event.type() == QEvent.KeyPress:
-            if event.key() in (Qt.Key_Up, Qt.Key_Down, Qt.Key_Return, Qt.Key_PageUp, Qt.Key_PageDown):
-                event.ignore()
-                evt = QKeyEvent(QEvent.KeyPress, event.key(), 0)
-                app = QApplication.instance()
-                app.postEvent(self._search_filter, evt)
-        return super(_SearchField, self).eventFilter(obj, event)
+        self._lbl = QtWidgets.QLabel(options[0])
+        self._btn = QtWidgets.QPushButton(u'\u25BC')
 
-    def focusOutEvent(self, *args, **kwargs):
-        super(_SearchField, self).focusOutEvent(*args, **kwargs)
+        self._items = options[:]
 
-        app = QApplication.instance()
-        if app.focusWidget() not in (self._search_filter, self):
-            self._search_filter.hide()
+        self._build_ui()
+        self._build_connections()
+        self._setup_ui()
 
+    # noinspection PyPep8Naming
+    def mouseReleaseEvent(self, evt):
+        if evt.button() == QtCore.Qt.LeftButton:
+            self._show_menu()
+            return True
+        else:
+            return super(FlatCombo, self).mouseReleaseEvent(evt)
 
-class _SearchFilter(QListWidget):
-    item_selected = Signal(str)
+    def current_text(self):
+        return self._lbl.text()
 
-    def __init__(self, *args, **kwargs):
-        super(_SearchFilter, self).__init__(*args, **kwargs)
+    def _build_ui(self):
+        lyt = QtWidgets.QHBoxLayout()
+        lyt.setContentsMargins(0, 0, 0, 0)
+        lyt.setSpacing(2)
+        lyt.addWidget(self._lbl)
+        lyt.addWidget(self._btn)
+        self.setLayout(lyt)
 
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.CustomizeWindowHint)
-        self.itemActivated.connect(self._emit_current)
-        self.setAttribute(Qt.WA_ShowWithoutActivating)
+    def _build_connections(self):
+        self._btn.clicked.connect(self._show_menu)
 
-    def eventFilter(self, *args, **kwargs):
-        return super(_SearchFilter, self).eventFilter(*args, **kwargs)
+    def _setup_ui(self):
+        self._btn.setFixedSize(20, 20)
+        self._btn.setFlat(True)
 
-    def _emit_current(self):
-        selection = self.selectedItems()
-        if selection:
-            self.item_selected.emit(selection[0].text())
-            self.hide()
+        _font = self.font()
+        _font.setBold(True)
+        self._btn.setFont(_font)
+        self._lbl.setFont(_font)
+
+        self._lbl.setAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
+
+        self._lbl.setStyleSheet('font-size: 16px;')
+        self._btn.setStyleSheet('border: none;')
+
+    def _show_menu(self):
+        menu = QtWidgets.QMenu()
+        for item in self._items:
+            menu.addAction(item)
+        a = menu.exec_(QtGui.QCursor().pos())
+        if a is not None:
+            value = a.text()
+            self._lbl.setText(value)
+            self.option_changed.emit(value)

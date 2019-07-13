@@ -268,4 +268,4 @@ class SqliteEngine(BaseEngine):
 
 
 def _regexp(expr, item):
-    return re.compile(expr).search(item) is not None
+    return re.compile(expr.lower()).search(item.lower()) is not None

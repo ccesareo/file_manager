@@ -1,8 +1,10 @@
-from Qt.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
+from Qt.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 
+from file_manager.data.connection import get_engine
 from ..config import VERSION
+from ..data.query import Query
+from ..data.entities.tag_to_asset import TagToAssetEntity
 from ..ui.menubar import FileManagerMenu
-from ..ui.sidebar import SideBarBrowser
 from ..ui.toolbar import FileManagerToolbar
 from ..ui.viewer import FileManagerViewer
 
@@ -12,7 +14,6 @@ class FileManagerApp(QMainWindow):
         super(FileManagerApp, self).__init__(*args, **kwargs)
 
         self._toolbar = FileManagerToolbar(self)
-        self._browser = SideBarBrowser(self)
         self._viewer = FileManagerViewer(self)
 
         self._build_ui()
@@ -27,28 +28,40 @@ class FileManagerApp(QMainWindow):
     def _build_ui(self):
         self.setMenuBar(FileManagerMenu())
 
-        lyt_workarea = QHBoxLayout()
-        lyt_workarea.setContentsMargins(0, 0, 0, 0)
-        lyt_workarea.setSpacing(4)
-        lyt_workarea.addWidget(self._browser)
-        lyt_workarea.addWidget(self._viewer)
-
         lyt_main = QVBoxLayout()
         lyt_main.setSpacing(4)
         lyt_main.addWidget(self._toolbar)
-        lyt_main.addLayout(lyt_workarea)
+        lyt_main.addWidget(self._viewer)
 
         wdg = QWidget()
         wdg.setLayout(lyt_main)
         self.setCentralWidget(wdg)
 
     def _build_connections(self):
-        self._toolbar.tags_changed.connect(self._browser.apply_tags)
-        self._toolbar.assets_changed.connect(self._browser.apply_assets)
-        self._browser.assets_selected.connect(self._viewer.view_assets)
-        self._browser.tags_updated.connect(self._viewer.refresh)
-
-        self.menuBar().database_cleared.connect(self._browser.clear)
+        self._toolbar.assets_changed.connect(self._apply_asset_search)
+        self._toolbar.tags_changed.connect(self._apply_tag_search)
 
     def _setup_ui(self):
         self.setWindowTitle('File Manager - %s' % VERSION)
+
+    def _apply_asset_search(self, regex):
+        asset_records = list()
+        if regex:
+            query = Query('asset')
+            query.add_filter('name', rvalue='.*%s.*' % regex, operator=Query.OP.MATCH)
+
+            engine = get_engine()
+            asset_records = engine.select(query)
+        self._viewer.view_assets(asset_records)
+
+    def _apply_tag_search(self, regex):
+        asset_records = list()
+        if regex:
+            query = Query('tag')
+            query.add_filter('name', rvalue='.*%s.*' % regex, operator=Query.OP.MATCH)
+
+            engine = get_engine()
+            tag_records = engine.select(query)
+            asset_records = TagToAssetEntity.find_assets(tag_records)
+            """:type: list[file_manager.data.entities.tag.TagEntity]"""
+        self._viewer.view_assets(asset_records)

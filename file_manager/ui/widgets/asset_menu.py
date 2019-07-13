@@ -53,7 +53,7 @@ class AssetEditMenu(QMenu):
     def set_thumbnail(self):
         asset = self._asset_records[0]
 
-        thumb_path = settings.thumbs_folder()
+        thumb_path = settings.thumbs_folder
         filename = '%d.png' % asset.id
         if grab_screen(os.path.join(thumb_path, filename)):
             asset.thumbnail = filename

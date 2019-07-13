@@ -44,6 +44,15 @@ class TagToAssetEntity(BaseEntity):
         engine.delete_many(existing)
 
     @classmethod
+    def find_assets(cls, tag_records):
+        tag_ids = [record.id for record in tag_records]
+
+        engine = get_engine()
+        links = engine.select(Query('tag_to_asset', tag_id=tag_ids))
+        asset_ids = [l.asset_id for l in links]
+        return engine.select(Query('asset', id=asset_ids))
+
+    @classmethod
     def _find_existing(cls, asset_records, tag_records):
         asset_ids = [x.id for x in asset_records]
         tag_ids = [x.id for x in tag_records]

@@ -1,5 +1,5 @@
 import maya.cmds as cmds
-from Qt.QtWidgets import qApp
+from PySide2.QtWidgets import qApp
 
 from . import FileManagerApp, settings
 
