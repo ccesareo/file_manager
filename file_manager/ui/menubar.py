@@ -1,13 +1,13 @@
 from Qt.QtCore import Signal
 from Qt.QtWidgets import QMenuBar
 
-from file_manager.data.connection import get_engine
-from file_manager.data.entities import TagEntity, AssetEntity
-from file_manager.data.entities.application import ApplicationEntity
-from file_manager.data.query import Query
-from file_manager.ui.importer import AssetImporter
-from file_manager.ui.table_editor import TableEditor
-from file_manager.ui.widgets.dialogs import ask
+from ..data.connection import get_engine
+from ..data.entities import TagEntity, AssetEntity
+from ..data.entities.application import ApplicationEntity
+from ..data.query import Query
+from ..ui.importer import AssetImporter
+from ..ui.table_editor import TableEditor
+from ..ui.widgets.dialogs import ask
 
 
 class FileManagerMenu(QMenuBar):

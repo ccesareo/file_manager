@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 from Qt.QtWidgets import qApp
 
-from file_manager import FileManagerApp, settings
+from . import FileManagerApp, settings
 
 # Window title and object names
 WINDOW_TITLE = 'FileManager'

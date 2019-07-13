@@ -1,11 +1,11 @@
 import os
 
-from file_manager.config import settings
-from file_manager.data.base_entity import BaseEntity
-from file_manager.data.connection import get_engine
-from file_manager.data.field import Field
-from file_manager.data.entities.tag_to_asset import TagToAssetEntity
-from file_manager.data.query import Query
+from ...config import settings
+from ...data.base_entity import BaseEntity
+from ...data.connection import get_engine
+from ...data.field import Field
+from ...data.entities.tag_to_asset import TagToAssetEntity
+from ...data.query import Query
 
 
 class AssetEntity(BaseEntity):

@@ -1,7 +1,7 @@
-from file_manager.data.base_entity import BaseEntity
-from file_manager.data.connection import get_engine
-from file_manager.data.field import Field
-from file_manager.data.query import Query
+from ...data.base_entity import BaseEntity
+from ...data.connection import get_engine
+from ...data.field import Field
+from ...data.query import Query
 
 
 class TagToAssetEntity(BaseEntity):

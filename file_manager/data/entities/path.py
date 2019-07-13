@@ -1,7 +1,7 @@
 import os
 
-from file_manager.data.base_entity import BaseEntity
-from file_manager.data.field import Field
+from ...data.base_entity import BaseEntity
+from ...data.field import Field
 
 
 class PathEntity(BaseEntity):

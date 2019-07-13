@@ -2,7 +2,7 @@ from Qt.QtCore import QTimer, Qt, QRect, QPoint
 from Qt.QtGui import QCursor, QPainter, QPixmap
 from Qt.QtWidgets import QApplication, QDesktopWidget, QDialog
 
-from file_manager import settings
+from ... import settings
 
 
 class ScreenWidget(QDialog):

@@ -2,9 +2,9 @@ from Qt.QtCore import Qt
 from Qt.QtWidgets import QTreeWidget, QVBoxLayout, QTreeWidgetItem, QApplication, QDialog, QPushButton, \
     QHBoxLayout, QGridLayout, QLabel, QLineEdit, QSpinBox
 
-from file_manager.data.connection import get_engine
-from file_manager.data.query import Query
-from file_manager.ui.widgets.dialogs import ask
+from ..data.connection import get_engine
+from ..data.query import Query
+from ..ui.widgets.dialogs import ask
 
 
 class TableEditor(QDialog):
@@ -173,7 +173,7 @@ class RecordCreation(QDialog):
 
 
 if __name__ == '__main__':
-    from file_manager.data.entities.tag import TagEntity
+    from ..data.entities.tag import TagEntity
 
     app = QApplication([])
     ui = TableEditor(TagEntity)

@@ -2,10 +2,10 @@ from collections import defaultdict
 
 from Qt.QtWidgets import QDialog, QGridLayout, QComboBox, QVBoxLayout, QLabel, QListWidget
 
-from file_manager.data.connection import get_engine
-from file_manager.data.entities import TagEntity
-from file_manager.data.entities.tag_to_asset import TagToAssetEntity
-from file_manager.data.query import Query
+from ...data.connection import get_engine
+from ...data.entities import TagEntity
+from ...data.entities.tag_to_asset import TagToAssetEntity
+from ...data.query import Query
 
 
 class TagEditor(QDialog):

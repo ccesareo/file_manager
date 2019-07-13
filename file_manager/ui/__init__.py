@@ -1,10 +1,10 @@
 from Qt.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QHBoxLayout
 
-from file_manager.config import VERSION
-from file_manager.ui.menubar import FileManagerMenu
-from file_manager.ui.sidebar import SideBarBrowser
-from file_manager.ui.toolbar import FileManagerToolbar
-from file_manager.ui.viewer import FileManagerViewer
+from ..config import VERSION
+from ..ui.menubar import FileManagerMenu
+from ..ui.sidebar import SideBarBrowser
+from ..ui.toolbar import FileManagerToolbar
+from ..ui.viewer import FileManagerViewer
 
 
 class FileManagerApp(QMainWindow):

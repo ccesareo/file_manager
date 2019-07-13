@@ -7,10 +7,10 @@ from Qt.QtGui import QCursor, QFont, QPixmap, QIcon
 from Qt.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QInputDialog, QMenu, \
     QApplication
 
-from file_manager.config import settings
-from file_manager.data.connection import get_engine
-from file_manager.data.query import Query
-from file_manager.ui.widgets.asset_menu import AssetEditMenu
+from ..config import settings
+from ..data.connection import get_engine
+from ..data.query import Query
+from ..ui.widgets.asset_menu import AssetEditMenu
 
 
 class FileManagerThumbnail(QWidget):

@@ -3,11 +3,11 @@ import re
 import sqlite3
 from operator import attrgetter
 
-from file_manager.config import LOG
-from file_manager.data.base_engine import BaseEngine
-from file_manager.data.field import Field
-from file_manager.data.entities import find_entity
-from file_manager.data.query import Query
+from ...config import LOG
+from ...data.base_engine import BaseEngine
+from ...data.field import Field
+from ...data.entities import find_entity
+from ...data.query import Query
 
 
 class SqliteEngine(BaseEngine):

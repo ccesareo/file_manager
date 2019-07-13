@@ -5,14 +5,14 @@ from Qt.QtCore import QEvent
 from Qt.QtWidgets import QDialog, QLineEdit, QGridLayout, QLabel, QVBoxLayout, QHBoxLayout, \
     QPushButton, QApplication, QFileDialog
 
-from file_manager.config import LOG
-from file_manager.data.connection import get_engine
-from file_manager.data.entities.asset import AssetEntity
-from file_manager.data.entities.path import PathEntity
-from file_manager.data.entities.tag import TagEntity
-from file_manager.data.entities.tag_to_asset import TagToAssetEntity
-from file_manager.data.query import Query
-from file_manager.ui.widgets.dialogs import ask
+from ..config import LOG
+from ..data.connection import get_engine
+from ..data.entities.asset import AssetEntity
+from ..data.entities.path import PathEntity
+from ..data.entities.tag import TagEntity
+from ..data.entities.tag_to_asset import TagToAssetEntity
+from ..data.query import Query
+from ..ui.widgets.dialogs import ask
 
 
 class FoundPathEvent(QEvent):

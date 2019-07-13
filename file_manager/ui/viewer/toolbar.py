@@ -1,7 +1,7 @@
 from Qt.QtCore import Qt, Signal
 from Qt.QtWidgets import QWidget, QSlider, QHBoxLayout, QLabel
 
-from file_manager.config import settings
+from ...config import settings
 
 
 class ViewerToolbar(QWidget):

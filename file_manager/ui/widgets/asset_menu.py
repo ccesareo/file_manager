@@ -3,12 +3,12 @@ import os
 from Qt.QtCore import Signal
 from Qt.QtWidgets import QMenu, QInputDialog
 
-from file_manager.config import settings
-from file_manager.data.connection import get_engine
-from file_manager.data.entities.asset import AssetEntity
-from file_manager.ui.widgets.dialogs import ask
-from file_manager.ui.widgets.screen_grabber import grab_screen
-from file_manager.ui.widgets.tag_editor import TagEditor
+from ...config import settings
+from ...data.connection import get_engine
+from ...data.entities.asset import AssetEntity
+from ...ui.widgets.dialogs import ask
+from ...ui.widgets.screen_grabber import grab_screen
+from ...ui.widgets.tag_editor import TagEditor
 
 
 class AssetEditMenu(QMenu):

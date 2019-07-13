@@ -4,9 +4,9 @@ from Qt.QtCore import Signal, Qt, QEvent, QTimer
 from Qt.QtGui import QKeyEvent
 from Qt.QtWidgets import QWidget, QLineEdit, QHBoxLayout, QListWidget, QApplication, QComboBox
 
-from file_manager.config import settings
-from file_manager.data.connection import get_engine
-from file_manager.data.query import Query
+from ..config import settings
+from ..data.connection import get_engine
+from ..data.query import Query
 
 
 class FileManagerToolbar(QWidget):

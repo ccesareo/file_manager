@@ -3,12 +3,12 @@ from operator import attrgetter
 from Qt.QtCore import Qt
 from Qt.QtWidgets import QWidget, QGridLayout, QScrollArea, QVBoxLayout
 
-from file_manager.config import settings
-from file_manager.data.connection import get_engine
-from file_manager.data.query import Query
-from file_manager.ui.thumbnail import FileManagerThumbnail
-from file_manager.ui.viewer.toolbar import ViewerToolbar
-from file_manager.utils import fm_groupby
+from ...config import settings
+from ...data.connection import get_engine
+from ...data.query import Query
+from ...ui.thumbnail import FileManagerThumbnail
+from ...ui.viewer.toolbar import ViewerToolbar
+from ...utils import fm_groupby
 
 
 class FileManagerViewer(QWidget):

@@ -1,8 +1,8 @@
-from file_manager.data.base_entity import BaseEntity
-from file_manager.data.entities.asset import AssetEntity
-from file_manager.data.entities.path import PathEntity
-from file_manager.data.entities.tag import TagEntity
-from file_manager.data.entities.tag_to_asset import TagToAssetEntity
+from ...data.base_entity import BaseEntity
+from ...data.entities.asset import AssetEntity
+from ...data.entities.path import PathEntity
+from ...data.entities.tag import TagEntity
+from ...data.entities.tag_to_asset import TagToAssetEntity
 
 
 def find_entity(name):
