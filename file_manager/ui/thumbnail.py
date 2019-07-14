@@ -3,6 +3,7 @@ import re
 import subprocess
 
 from Qt import QtCore, QtGui, QtWidgets
+from .widgets.screen_grabber import grab_screen
 from ..config import settings
 from ..data.connection import get_engine
 from ..data.query import Query
@@ -47,7 +48,7 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         self.path_records = path_records[:]
 
         self._lbl_title = QtWidgets.QLabel(asset_record.name.replace('_', ' '))
-        self._thumb = QtWidgets.QLabel('---')
+        self._thumb = _ImageWidget(self.asset_record, '---')
         self._lyt_tags = QtWidgets.QVBoxLayout()
         self._btn_menu = QtWidgets.QPushButton('...')
 
@@ -74,7 +75,7 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         _app_icons.setSpacing(0)
         for path_record in self.path_records:
             app_pix = FileManagerThumbnail.APP_CACHE.get(path_record.type)
-            _app_icons.addWidget(AppButton(path_record, app_pix))
+            _app_icons.addWidget(_AppButton(path_record, app_pix))
 
         lyt_bottom = QtWidgets.QHBoxLayout()
         lyt_bottom.setContentsMargins(0, 0, 0, 0)
@@ -95,6 +96,7 @@ class FileManagerThumbnail(QtWidgets.QFrame):
 
     def _build_connections(self):
         self._btn_menu.clicked.connect(self._show_menu)
+        self._thumb.thumbnail_updated.connect(self._update_thumbnail)
 
     def _setup_ui(self):
         self.setFrameStyle(QtCore.Qt.SolidLine)
@@ -140,13 +142,6 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         menu.exec_(QtGui.QCursor.pos())
 
     def _update_thumbnail(self):
-        if not self.asset_record.thumbnail:
-            for path in self.path_records:
-                if path.type.lower() in ('jpg', 'png'):
-                    self._thumb.setText('<img height=%d src="%s"/>' % (self._thumb.height(), path.filepath))
-                    self.update_thumb_size()
-                    return
-
         thumbs_folder = settings.thumbs_folder
         if not thumbs_folder or not self.asset_record.thumbnail:
             return
@@ -175,7 +170,7 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         for tag_record in self.tag_records:
             lbl = QtWidgets.QLabel(tag_record.name)
             lbl.setAlignment(QtCore.Qt.AlignCenter)
-            # lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
+            lbl.setStyleSheet("QLabel {background-color: %s; color: %s;}" % (tag_record.bg_color, tag_record.fg_color))
             lbl.setFixedHeight(20)
 
             font = lbl.font()
@@ -184,12 +179,12 @@ class FileManagerThumbnail(QtWidgets.QFrame):
             self._lyt_tags.addWidget(lbl)
 
 
-class AppButton(QtWidgets.QPushButton):
+class _AppButton(QtWidgets.QPushButton):
     def __init__(self, path_record, app_pix):
         """
         :type path_record: file_manager.data.entities.path.PathEntity
         """
-        super(AppButton, self).__init__()
+        super(_AppButton, self).__init__()
 
         self.record = path_record
 
@@ -203,7 +198,7 @@ class AppButton(QtWidgets.QPushButton):
             self.setText(path_record.type)
 
     def mouseReleaseEvent(self, event):
-        super(AppButton, self).mouseReleaseEvent(event)
+        super(_AppButton, self).mouseReleaseEvent(event)
 
         if event.button() == QtCore.Qt.RightButton:
             menu = QtWidgets.QMenu()
@@ -241,3 +236,39 @@ class AppButton(QtWidgets.QPushButton):
             subprocess.Popen('explorer /select,"%s"' % self.record.filepath.replace('/', '\\'))
         else:
             os.startfile(os.path.dirname(self.record.filepath))
+
+
+class _ImageWidget(QtWidgets.QLabel):
+    thumbnail_updated = QtCore.Signal()
+
+    def __init__(self, asset_record, *args, **kwargs):
+        super(_ImageWidget, self).__init__(*args, **kwargs)
+
+        self._asset_record = asset_record
+
+    def mouseReleaseEvent(self, evt):
+        if evt.button() != QtCore.Qt.RightButton:
+            return super(_ImageWidget, self).mouseReleaseEvent(evt)
+
+        menu = QtWidgets.QMenu()
+        menu.addAction('Screen Grab', self.screen_grab)
+        menu.addAction('Select File', self.select_file)
+        menu.exec_(QtGui.QCursor().pos())
+
+    def screen_grab(self):
+        thumb_path = settings.thumbs_folder
+        filename = '%d.png' % self._asset_record.id
+        thumb_file_path = os.path.join(thumb_path, filename)
+        if grab_screen(thumb_file_path):
+            self._asset_record.assign_thumbnail(thumb_file_path)
+            self.thumbnail_updated.emit()
+
+    def select_file(self):
+        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Image', filter='Images (*.png *.jpg)')
+        if isinstance(file_name, tuple):
+            file_name = file_name [0]
+        if not file_name:
+            return
+
+        self._asset_record.assign_thumbnail(file_name)
+        self.thumbnail_updated.emit()

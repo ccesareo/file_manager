@@ -1,5 +1,4 @@
 from Qt import QtCore, QtGui, QtWidgets
-from ..config import settings
 
 
 class FileManagerToolbar(QtWidgets.QWidget):
@@ -14,7 +13,7 @@ class FileManagerToolbar(QtWidgets.QWidget):
 
         self._timer_search = QtCore.QTimer()
         self._timer_search.setSingleShot(True)
-        self._timer_search.setInterval(settings.search_timeout)
+        self._timer_search.setInterval(300)
 
         self._build_ui()
         self._build_connections()

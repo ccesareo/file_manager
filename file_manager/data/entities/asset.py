@@ -1,4 +1,5 @@
 import os
+import shutil
 
 from .base_entity import BaseEntity
 from ..connection import get_engine
@@ -54,3 +55,18 @@ class AssetEntity(BaseEntity):
 
         AssetEntity.delete(asset_records)
         return asset
+
+    def assign_thumbnail(self, thumb_file_path):
+        assert os.path.isfile(thumb_file_path), 'File does not exist %s' % thumb_file_path
+
+        ext = thumb_file_path.rsplit('.', 1)[-1].lower()
+        assert ext in ('png', 'jpg'), 'Only jpg or png file types allowed for thumbnails.'
+
+        repo_path = os.path.join(settings.thumbs_folder, '%s.%s' % (self.id, ext))
+
+        # Copy file to proper location if not the same file
+        if os.path.abspath(thumb_file_path) != os.path.abspath(repo_path):
+            shutil.copy(thumb_file_path, repo_path)
+
+        self.thumbnail = repo_path
+        get_engine().update(self)

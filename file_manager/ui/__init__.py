@@ -1,9 +1,9 @@
 from Qt.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 
-from file_manager.data.connection import get_engine
 from ..config import VERSION
-from ..data.query import Query
+from ..data.connection import get_engine
 from ..data.entities.tag_to_asset import TagToAssetEntity
+from ..data.query import Query
 from ..ui.menubar import FileManagerMenu
 from ..ui.toolbar import FileManagerToolbar
 from ..ui.viewer import FileManagerViewer

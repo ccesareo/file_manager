@@ -1,4 +1,4 @@
-from Qt import QtCore, QtGui, QtWidgets
+from Qt import QtGui, QtWidgets
 
 
 def apply_default_color_scheme():

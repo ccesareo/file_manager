@@ -4,7 +4,6 @@ from Qt.QtCore import Signal
 from Qt.QtWidgets import QMenu, QInputDialog
 
 from ...config import settings
-from ...data.connection import get_engine
 from ...data.entities.asset import AssetEntity
 from ...ui.widgets.dialogs import ask
 from ...ui.widgets.screen_grabber import grab_screen
@@ -27,8 +26,6 @@ class AssetEditMenu(QMenu):
         self.addAction('Manage Tags', self.add_tag_clicked)
         if len(asset_records) > 1:
             self.addAction('Merge Assets', self.merge_assets_clicked)
-        if len(asset_records) == 1:
-            self.addAction('Set Thumbnail', self.set_thumbnail)
         self.addAction('Delete Assets', self.del_assets_clicked)
 
     def add_tag_clicked(self):
@@ -49,13 +46,3 @@ class AssetEditMenu(QMenu):
 
         AssetEntity.delete(self._asset_records)
         self.assets_deleted.emit()
-
-    def set_thumbnail(self):
-        asset = self._asset_records[0]
-
-        thumb_path = settings.thumbs_folder
-        filename = '%d.png' % asset.id
-        if grab_screen(os.path.join(thumb_path, filename)):
-            asset.thumbnail = filename
-            get_engine().update(asset)
-        self.thumbnail_updated.emit()

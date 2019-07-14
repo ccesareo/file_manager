@@ -3,7 +3,6 @@ import logging
 import os
 from collections import defaultdict
 
-
 VERSION = 'v0.0.2'
 
 logging.basicConfig(format='%%(asctime)s (%s) [%%(levelname)s] %%(message)s' % VERSION, datefmt='%Y-%m-%d %H:%M:%S')
@@ -19,9 +18,8 @@ class _Settings(object):
 
         self.main_ui = None
         self.thumb_size = 100  # percent
-        self.thumbnail_folder_win = None
-        self.app_icons_win = None
-        self.search_timeout = None
+        self._thumbnail_folder = None
+        self._app_icons_win = None
 
         self.db_engine = None
         self.db_name = None
@@ -35,14 +33,14 @@ class _Settings(object):
     @property
     def thumbs_folder(self):
         if os.name == 'nt':
-            assert self.thumbnail_folder_win, 'No thumbnail_folder_win set in settings.'
-            return self.thumbnail_folder_win
+            assert self._thumbnail_folder, 'No thumbnail_folder set in settings.'
+            return self._thumbnail_folder
         raise Exception('Only windows thumbnail folder has been defined.')
 
     @property
     def icons_folder(self):
         if os.name == 'nt':
-            return self.app_icons_win
+            return self._app_icons_win
         raise Exception('Only windows thumbnail folder has been defined.')
 
     def _load_settings(self):
@@ -52,10 +50,8 @@ class _Settings(object):
         config = ConfigParser.ConfigParser()
         config.readfp(open(settings_file))
 
-        self.thumbnail_folder_win = config.get('settings', 'thumbnail_folder_win')
-        self.app_icons_win = config.get('settings', 'app_icons_win')
-
-        self.search_timeout = config.getint('settings', 'search_timeout_ms')
+        self._thumbnail_folder = config.get('settings', 'thumbnail_folder')
+        self._app_icons_win = config.get('settings', 'app_icons_win')
 
         self.db_engine = config.get('database', 'engine')
         self.db_name = config.get('database', 'name')
@@ -65,8 +61,8 @@ class _Settings(object):
         self.db_pass = config.get('database', 'pass')
 
         # Create directory
-        if os.name == 'nt' and self.thumbnail_folder_win and not os.path.isdir(self.thumbnail_folder_win):
-            os.makedirs(self.thumbnail_folder_win)
+        if os.name == 'nt' and self._thumbnail_folder and not os.path.isdir(self._thumbnail_folder):
+            os.makedirs(self._thumbnail_folder)
 
 
 settings = _Settings()

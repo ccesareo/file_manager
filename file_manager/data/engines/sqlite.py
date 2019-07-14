@@ -163,20 +163,20 @@ class SqliteEngine(BaseEngine):
                 statements.append(cmd)
                 all_values.extend(values)
             cursor.execute('\n'.join(statements), all_values)
-
-            refresh_records = SqliteEngine.select(Query(entity_name, id=[_.id for _ in entities]))
-            refresh_records.sort(key=attrgetter('id'))
-
-            assert len(entities) == len(refresh_records), 'Updated entity count does not match refresh count.'
-
-            # Apply new data
-            for entity, new_entity in zip(entities, refresh_records):
-                for k, v in new_entity.data().items():
-                    setattr(entity, k, v)
-                entity.clear_changes()
         finally:
             conn.commit()
             conn.close()
+
+        refresh_records = SqliteEngine.select(Query(entity_name, id=[_.id for _ in entities]))
+        refresh_records.sort(key=attrgetter('id'))
+
+        assert len(entities) == len(refresh_records), 'Updated entity count does not match refresh count.'
+
+        # Apply new data
+        for entity, new_entity in zip(entities, refresh_records):
+            for k, v in new_entity.data().items():
+                setattr(entity, k, v)
+            entity.clear_changes()
 
         # statement = "UPDATE %s SET %s WHERE id=%s RETURNING *" % (entity.NAME, ', '.join(set_data), entity.id)
         # conn = SqliteEngine._connect()
