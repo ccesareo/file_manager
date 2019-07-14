@@ -11,8 +11,7 @@ def is_valid(file_path):
     Returns:
         bool: True if the path is valid for processing
     """
-    print 'Checking', file_path
-    return False
+    return True
 
 
 def get_asset_name(file_path):
@@ -39,7 +38,7 @@ def get_tags(file_path):
     Returns:
         list of str: List of tags to assign (Returning None will skip)
     """
-    return
+    return ['new']
 
 
 def get_thumbnail(file_path):
@@ -52,4 +51,4 @@ def get_thumbnail(file_path):
     Returns:
         str: Path to a thumbnail image to be copied into the thumbnail repo area (Returning None will skip)
     """
-    pass
+    return

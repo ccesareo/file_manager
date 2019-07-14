@@ -3,8 +3,6 @@ import os
 from Qt import QtCore, QtWidgets
 from . import apply_default_color_scheme, FileManagerApp, settings
 
-QtCore.QDir.addSearchPath('images', os.path.dirname(__file__) + '\\resources')
-
 app = QtWidgets.QApplication([])
 apply_default_color_scheme()
 ui = FileManagerApp()

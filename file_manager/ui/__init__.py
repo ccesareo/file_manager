@@ -1,6 +1,5 @@
-from Qt.QtWidgets import QMainWindow, QVBoxLayout, QWidget
-
-from ..config import VERSION
+from Qt import QtCore, QtWidgets
+from ..config import VERSION, settings
 from ..data.connection import get_engine
 from ..data.entities.tag_to_asset import TagToAssetEntity
 from ..data.query import Query
@@ -8,8 +7,10 @@ from ..ui.menubar import FileManagerMenu
 from ..ui.toolbar import FileManagerToolbar
 from ..ui.viewer import FileManagerViewer
 
+QtCore.QDir.addSearchPath('images', settings.lib_dir + '\\resources')
 
-class FileManagerApp(QMainWindow):
+
+class FileManagerApp(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(FileManagerApp, self).__init__(*args, **kwargs)
 
@@ -28,12 +29,12 @@ class FileManagerApp(QMainWindow):
     def _build_ui(self):
         self.setMenuBar(FileManagerMenu())
 
-        lyt_main = QVBoxLayout()
+        lyt_main = QtWidgets.QVBoxLayout()
         lyt_main.setSpacing(4)
         lyt_main.addWidget(self._toolbar)
         lyt_main.addWidget(self._viewer)
 
-        wdg = QWidget()
+        wdg = QtWidgets.QWidget()
         wdg.setLayout(lyt_main)
         self.setCentralWidget(wdg)
 
