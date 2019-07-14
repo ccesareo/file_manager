@@ -11,7 +11,8 @@ def is_valid(file_path):
     Returns:
         bool: True if the path is valid for processing
     """
-    return True
+    print 'Checking', file_path
+    return False
 
 
 def get_asset_name(file_path):

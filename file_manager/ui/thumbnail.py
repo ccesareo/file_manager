@@ -182,7 +182,7 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         if not ask('Delete Asset?', 'Are you sure you want to remove this asset?'):
             return
 
-        AssetEntity.delete(self._asset_records)
+        AssetEntity.delete([self.asset_record])
         self.deleted.emit()
 
 

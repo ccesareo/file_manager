@@ -1,11 +1,9 @@
-from Qt.QtCore import QTimer, Qt, QRect, QPoint
-from Qt.QtGui import QCursor, QPainter, QPixmap
-from Qt.QtWidgets import QApplication, QDesktopWidget, QDialog
+from Qt import QtCore, QtGui, QtWidgets
 
 from ... import settings
 
 
-class ScreenWidget(QDialog):
+class ScreenWidget(QtWidgets.QDialog):
     def __init__(self, *args, **kwargs):
         super(ScreenWidget, self).__init__(*args, **kwargs)
 
@@ -15,12 +13,12 @@ class ScreenWidget(QDialog):
         self.pixmap = None
         self.current_screen = 99
 
-        self._dt = QDesktopWidget()
+        self._dt = QtWidgets.QDesktopWidget()
 
-        self._timer_move_screen = QTimer()
+        self._timer_move_screen = QtCore.QTimer()
         self._timer_move_screen.setInterval(150)
 
-        self._timer_draw_screen = QTimer()
+        self._timer_draw_screen = QtCore.QTimer()
         self._timer_draw_screen.setInterval(25)
 
         self._check_mouse_position()
@@ -32,7 +30,7 @@ class ScreenWidget(QDialog):
 
     def _setup_ui(self):
         self.setWindowOpacity(.5)
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
 
     def _build_connections(self):
         self._timer_move_screen.timeout.connect(self._check_mouse_position)
@@ -51,9 +49,9 @@ class ScreenWidget(QDialog):
         w = self.end_pos.x() - x
         h = self.end_pos.y() - y
 
-        rect = QRect(x, y, w, h)
+        rect = QtCore.QRect(x, y, w, h)
 
-        painter = QPainter()
+        painter = QtGui.QPainter()
         painter.begin(self)
         painter.drawRect(rect)
         painter.end()
@@ -61,7 +59,7 @@ class ScreenWidget(QDialog):
     def mousePressEvent(self, event):
         super(ScreenWidget, self).mousePressEvent(event)
 
-        self.center_pos = QCursor.pos()
+        self.center_pos = QtGui.QCursor.pos()
         self._build_pos()
         self._timer_draw_screen.start()
 
@@ -79,7 +77,7 @@ class ScreenWidget(QDialog):
 
         ratio = 4 / 3.0
 
-        pos = QCursor.pos()
+        pos = QtGui.QCursor.pos()
 
         cx = self.center_pos.x()
         cy = self.center_pos.y()
@@ -93,11 +91,11 @@ class ScreenWidget(QDialog):
         y1 = cy - (height / 2)
         y2 = cy + (height / 2)
 
-        self.start_pos = QPoint(x1, y1)
-        self.end_pos = QPoint(x2, y2)
+        self.start_pos = QtCore.QPoint(x1, y1)
+        self.end_pos = QtCore.QPoint(x2, y2)
 
     def _check_mouse_position(self):
-        _current_screen = self._dt.screenNumber(QCursor.pos())
+        _current_screen = self._dt.screenNumber(QtGui.QCursor.pos())
         if _current_screen != self.current_screen:
             geo = self._dt.screenGeometry(_current_screen)
             self.setGeometry(geo)
@@ -113,17 +111,12 @@ def grab_screen(output_path):
         if not result:
             return False
 
-        rect = QRect(swdg.start_pos, swdg.end_pos)
-        dw = QApplication.desktop()
-        pix = QPixmap.grabWindow(dw.winId(), x=rect.x(), y=rect.y(), w=rect.width(), h=rect.height())
+        rect = QtCore.QRect(swdg.start_pos, swdg.end_pos)
+        dw = QtWidgets.QApplication.desktop()
+        pix = QtGui.QPixmap.grabWindow(dw.winId(), x=rect.x(), y=rect.y(), w=rect.width(), h=rect.height())
 
     finally:
         if settings.main_ui:
             settings.main_ui.show()
 
     return pix.save(output_path, quality=100)
-
-
-if __name__ == '__main__':
-    app = QApplication([])
-    grab_screen(r'C:\temp\thumbs\test.png')

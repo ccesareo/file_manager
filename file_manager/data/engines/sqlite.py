@@ -77,6 +77,7 @@ class SqliteEngine(BaseEngine):
         for k, v in new_entity.data().items():
             setattr(entity, k, v)
         entity.clear_changes()
+        return entity
 
     @classmethod
     def create_many(cls, entities):

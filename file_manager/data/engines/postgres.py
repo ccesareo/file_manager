@@ -74,6 +74,7 @@ class PsycoPGEngine(BaseEngine):
             entity.clear_changes()
         finally:
             conn.close()
+        return entity
 
     @classmethod
     def create_many(cls, entities):

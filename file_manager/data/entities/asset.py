@@ -28,7 +28,7 @@ class AssetEntity(BaseEntity):
 
         for record in records:
             if record.thumbnail:
-                folder = settings.thumbs_folder()
+                folder = settings.thumbs_folder
                 path = os.path.join(folder, record.thumbnail)
                 if os.path.isfile(path):
                     os.remove(path)

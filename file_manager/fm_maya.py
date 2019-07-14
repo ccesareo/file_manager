@@ -26,6 +26,13 @@ def _maya_main_window():
 
 
 def run_maya():
+    # Install
+    from file_manager.data.connection import get_engine
+    from file_manager.data.entities import *
+    engine = get_engine()
+    for model in BaseEntity.__subclasses__():
+        engine.setup_entity(model)
+
     _maya_delete_ui()  # Delete any existing existing UI
 
     app = FileManagerApp(parent=_maya_main_window())

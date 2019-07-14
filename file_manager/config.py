@@ -38,6 +38,11 @@ class _Settings(object):
         raise Exception('Only windows thumbnail folder has been defined.')
 
     @property
+    def templates_folder(self):
+        print __file__, self.lib_dir
+        return (os.path.dirname(self.lib_dir) or '.') + '\\templates'
+
+    @property
     def icons_folder(self):
         if os.name == 'nt':
             return self._app_icons_win

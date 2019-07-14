@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from Qt.QtWidgets import QDialog, QGridLayout, QComboBox, QVBoxLayout, QLabel, QListWidget
+from Qt import QtWidgets
 
 from ...data.connection import get_engine
 from ...data.entities import TagEntity
@@ -8,7 +8,7 @@ from ...data.entities.tag_to_asset import TagToAssetEntity
 from ...data.query import Query
 
 
-class TagEditor(QDialog):
+class TagEditor(QtWidgets.QDialog):
     def __init__(self, asset_records, *args, **kwargs):
         super(TagEditor, self).__init__(*args, **kwargs)
 
@@ -21,9 +21,9 @@ class TagEditor(QDialog):
 
         self._cmbo_add_tag = ComboNoScroll()
         self._cmbo_rem_tag = ComboNoScroll()
-        self._lyt_shared_tags = QVBoxLayout()
+        self._lyt_shared_tags = QtWidgets.QVBoxLayout()
 
-        self._list_history = QListWidget()
+        self._list_history = QtWidgets.QListWidget()
 
         self._build_ui()
         self._build_connections()
@@ -32,15 +32,15 @@ class TagEditor(QDialog):
     def _build_ui(self):
         self.setWindowTitle('Tag Editor')
 
-        lyt_grid = QGridLayout()
-        lyt_grid.addWidget(QLabel('Add Tag'), 0, 0)
+        lyt_grid = QtWidgets.QGridLayout()
+        lyt_grid.addWidget(QtWidgets.QLabel('Add Tag'), 0, 0)
         lyt_grid.addWidget(self._cmbo_add_tag, 0, 1)
-        lyt_grid.addWidget(QLabel('Remove Tag'), 1, 0)
+        lyt_grid.addWidget(QtWidgets.QLabel('Remove Tag'), 1, 0)
         lyt_grid.addWidget(self._cmbo_rem_tag, 1, 1)
 
-        lyt_main = QVBoxLayout()
+        lyt_main = QtWidgets.QVBoxLayout()
         lyt_main.addLayout(lyt_grid)
-        lyt_main.addWidget(QLabel('History'))
+        lyt_main.addWidget(QtWidgets.QLabel('History'))
         lyt_main.addWidget(self._list_history)
         self.setLayout(lyt_main)
 
@@ -123,6 +123,6 @@ class TagEditor(QDialog):
         return sorted(names)
 
 
-class ComboNoScroll(QComboBox):
+class ComboNoScroll(QtWidgets.QComboBox):
     def wheelEvent(self, event):
         event.ignore()
