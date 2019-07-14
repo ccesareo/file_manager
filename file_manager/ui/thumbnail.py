@@ -3,11 +3,13 @@ import re
 import subprocess
 
 from Qt import QtCore, QtGui, QtWidgets
+from .widgets.dialogs import ask
 from .widgets.screen_grabber import grab_screen
+from .widgets.tag_editor import TagEditor
 from ..config import settings
 from ..data.connection import get_engine
+from ..data.entities import AssetEntity
 from ..data.query import Query
-from ..ui.widgets.asset_menu import AssetEditMenu
 
 
 class FileManagerThumbnail(QtWidgets.QFrame):
@@ -50,7 +52,8 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         self._lbl_title = QtWidgets.QLabel(asset_record.name.replace('_', ' '))
         self._thumb = _ImageWidget(self.asset_record, '---')
         self._lyt_tags = QtWidgets.QVBoxLayout()
-        self._btn_menu = QtWidgets.QPushButton('...')
+        self._btn_tags = QtWidgets.QPushButton()
+        self._btn_trash = QtWidgets.QPushButton()
 
         self._build_ui()
         self._build_connections()
@@ -82,7 +85,8 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         lyt_bottom.setSpacing(4)
         lyt_bottom.addLayout(_app_icons)
         lyt_bottom.addStretch()
-        lyt_bottom.addWidget(self._btn_menu)
+        lyt_bottom.addWidget(self._btn_tags)
+        lyt_bottom.addWidget(self._btn_trash)
 
         lyt_main = QtWidgets.QVBoxLayout()
         lyt_main.setContentsMargins(5, 5, 5, 5)
@@ -95,7 +99,8 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         self.setLayout(lyt_main)
 
     def _build_connections(self):
-        self._btn_menu.clicked.connect(self._show_menu)
+        self._btn_tags.clicked.connect(self._clicked_manage_tags)
+        self._btn_trash.clicked.connect(self._clicked_delete_asset)
         self._thumb.thumbnail_updated.connect(self._update_thumbnail)
 
     def _setup_ui(self):
@@ -107,20 +112,18 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         self._lbl_title.setFixedHeight(35)
         self._lbl_title.setAlignment(QtCore.Qt.AlignCenter)
         self._lbl_title.setWordWrap(True)
-        # self._lbl_title.setStyleSheet(
-        #     """
-        #     background-color: rgba(0, 50, 150, 120);
-        #     color: rgb(225, 225, 225);
-        #     font-family: Consolas;
-        #     font-weight: bold;
-        #     """
-        # )
         self._lbl_title.mouseDoubleClickEvent = self._edit_title
 
         self._lyt_tags.setContentsMargins(0, 0, 0, 0)
         self._lyt_tags.setSpacing(0)
 
-        self._btn_menu.setFixedSize(26, 26)
+        self._btn_tags.setFixedSize(26, 26)
+        self._btn_tags.setIcon(QtGui.QIcon('images:tag.png'))
+        self._btn_tags.setFlat(True)
+
+        self._btn_trash.setFixedSize(26, 26)
+        self._btn_trash.setIcon(QtGui.QIcon('images:trash.png'))
+        self._btn_trash.setFlat(True)
 
         self._update_tags(refresh=False)
         self._update_thumbnail()
@@ -133,13 +136,6 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         self.asset_record.name = new_text
         get_engine().update(self.asset_record)
         self._lbl_title.setText(new_text)
-
-    def _show_menu(self):
-        menu = AssetEditMenu([self.asset_record], parent=self)
-        menu.assets_deleted.connect(self.deleted.emit)
-        menu.thumbnail_updated.connect(self._update_thumbnail)
-        menu.tags_updated.connect(self._update_tags)
-        menu.exec_(QtGui.QCursor.pos())
 
     def _update_thumbnail(self):
         thumbs_folder = settings.thumbs_folder
@@ -177,6 +173,17 @@ class FileManagerThumbnail(QtWidgets.QFrame):
             font.setPointSize(12)
             lbl.setFont(font)
             self._lyt_tags.addWidget(lbl)
+
+    def _clicked_manage_tags(self):
+        TagEditor([self.asset_record], parent=self).exec_()
+        self._update_tags()
+
+    def _clicked_delete_asset(self):
+        if not ask('Delete Asset?', 'Are you sure you want to remove this asset?'):
+            return
+
+        AssetEntity.delete(self._asset_records)
+        self.deleted.emit()
 
 
 class _AppButton(QtWidgets.QPushButton):
@@ -266,7 +273,7 @@ class _ImageWidget(QtWidgets.QLabel):
     def select_file(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Image', filter='Images (*.png *.jpg)')
         if isinstance(file_name, tuple):
-            file_name = file_name [0]
+            file_name = file_name[0]
         if not file_name:
             return
 
