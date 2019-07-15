@@ -157,7 +157,7 @@ def main(input_name, output_name):
     # Convert preview to gif
 
     _args = [
-        r'D:\ffmpeg.exe',
+        os.path.abspath(os.path.join(__file__, '..', 'ffmpeg.exe')),
         '-i', final_output,
         '-f', 'gif',
         '-y',
