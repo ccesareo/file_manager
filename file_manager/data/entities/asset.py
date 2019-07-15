@@ -68,7 +68,7 @@ class AssetEntity(BaseEntity):
         repo_path = os.path.join(settings.thumbs_folder, '%s.%s' % (self.id, ext))
 
         # Copy file to proper location if not the same file
-        if os.path.abspath(thumb_file_path) != os.path.abspath(repo_path):
+        if os.path.abspath(thumb_file_path).replace('\\', '/') != os.path.abspath(repo_path).replace('\\', '/'):
             shutil.copy(thumb_file_path, repo_path)
 
         self.thumbnail = repo_path
