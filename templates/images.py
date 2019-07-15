@@ -7,7 +7,7 @@ import os
 
 def is_valid(file_path):
     ext = os.path.splitext(file_path)[-1].lower()
-    return ext in ('.jpg', '.png')
+    return ext in ('.jpg', '.png', '.gif')
 
 
 def get_thumbnail(file_path):

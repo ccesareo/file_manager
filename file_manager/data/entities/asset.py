@@ -31,7 +31,10 @@ class AssetEntity(BaseEntity):
                 folder = settings.thumbs_folder
                 path = os.path.join(folder, record.thumbnail)
                 if os.path.isfile(path):
-                    os.remove(path)
+                    try:
+                        os.remove(path)
+                    except WindowsError:
+                        pass
 
     @classmethod
     def merge(cls, asset_records, new_name):
@@ -60,7 +63,7 @@ class AssetEntity(BaseEntity):
         assert os.path.isfile(thumb_file_path), 'File does not exist %s' % thumb_file_path
 
         ext = thumb_file_path.rsplit('.', 1)[-1].lower()
-        assert ext in ('png', 'jpg'), 'Only jpg or png file types allowed for thumbnails.'
+        assert ext in ('png', 'gif', 'jpg'), 'Only jpg or png file types allowed for thumbnails.'
 
         repo_path = os.path.join(settings.thumbs_folder, '%s.%s' % (self.id, ext))
 

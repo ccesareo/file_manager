@@ -61,15 +61,11 @@ class FileManagerThumbnail(QtWidgets.QFrame):
 
     def update_thumb_size(self):
         size = settings.thumb_size * FileManagerThumbnail.REF_WIDTH / 100.0
+
         self.setFixedWidth(size + 12)
         self.setMinimumHeight(size + 50)
 
-        height = size / (4.0 / 3)
-        self._thumb.setFixedSize(size, height)
-
-        lbl = self._thumb.text()
-        if 'height=' in lbl:
-            self._thumb.setText(re.sub('height=\d+', 'height=%d' % height, lbl))
+        self._thumb.update_width(size)
 
     def _build_ui(self):
         _app_icons = QtWidgets.QHBoxLayout()
@@ -144,7 +140,7 @@ class FileManagerThumbnail(QtWidgets.QFrame):
 
         thumb_path = os.path.join(thumbs_folder, self.asset_record.thumbnail)
         self._thumb.clear()
-        self._thumb.setText('<img height=%d src="%s"/>' % (self._thumb.height(), thumb_path))
+        self._thumb.set_image(thumb_path)
         self._thumb.update()
         self.update_thumb_size()
 
@@ -253,6 +249,13 @@ class _ImageWidget(QtWidgets.QLabel):
 
         self._asset_record = asset_record
 
+        self._movie = None
+        self._width = 32
+
+        self._timer_play = QtCore.QTimer()
+        self._timer_play.setSingleShot(True)
+        self._timer_play.timeout.connect(self._play)
+
     def mouseReleaseEvent(self, evt):
         if evt.button() != QtCore.Qt.RightButton:
             return super(_ImageWidget, self).mouseReleaseEvent(evt)
@@ -261,6 +264,27 @@ class _ImageWidget(QtWidgets.QLabel):
         menu.addAction('Screen Grab', self.screen_grab)
         menu.addAction('Select File', self.select_file)
         menu.exec_(QtGui.QCursor().pos())
+
+    def enterEvent(self, evt):
+        self._timer_play.start(300)
+
+    def leaveEvent(self, evt):
+        self._timer_play.stop()
+        self._stop()
+
+    def set_image(self, img):
+        self._img = img
+        self.setText('<img height=%d src="%s"/>' % (32, self._img))
+
+    def update_width(self, width):
+        self._width = width
+
+        height = self._width / (4.0 / 3)
+        self.setFixedSize(self._width, height)
+
+        lbl = self.text()
+        if 'height=' in lbl:
+            self.setText(re.sub('height=\d+', 'height=%d' % height, lbl))
 
     def screen_grab(self):
         thumb_path = settings.thumbs_folder
@@ -271,7 +295,7 @@ class _ImageWidget(QtWidgets.QLabel):
             self.thumbnail_updated.emit()
 
     def select_file(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Image', filter='Images (*.png *.jpg)')
+        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Image', filter='Images (*.png *.jpg *.gif)')
         if isinstance(file_name, tuple):
             file_name = file_name[0]
         if not file_name:
@@ -279,3 +303,23 @@ class _ImageWidget(QtWidgets.QLabel):
 
         self._asset_record.assign_thumbnail(file_name)
         self.thumbnail_updated.emit()
+
+    def _play(self):
+        if not self._img.lower().endswith('.gif'):
+            return
+
+        self._movie = QtGui.QMovie(self._img)
+        self._movie.setScaledSize(self.size())
+        self.setMovie(self._movie)
+        self._movie.start()
+
+    def _stop(self):
+        if not self._movie:
+            return
+
+        self._movie.stop()
+        self.setMovie(None)
+        self._movie = None
+
+        self.set_image(self._img)
+        self.update_width(self._width)
