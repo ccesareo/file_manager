@@ -76,7 +76,6 @@ def convert_joint(curr_joint, group_name, root_jnt=True):
 
 def _create_ball(joint, group, size):
     name = joint + group + '_ball'  # Use for referencing, leading pipe when creating sphere
-    assert name != 'Bip01FBXASC032HeadNubPrimitiveSkeleton_ball'
     _end_ball = mc.sphere(n=name)
     mc.parent(_end_ball, group)
     mc.scale(size, size, size, name, r=True)
