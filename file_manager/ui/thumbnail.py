@@ -258,29 +258,81 @@ class _ImageWidget(QtWidgets.QLabel):
         self._asset_record = asset_record
         self._path_records = path_records
 
+        self._img = None
+        self._last_frame = -1
         self._movie = None
+        self._is_scrubbing = False
+        self._is_playable = False
         self._width = 32
 
         self._timer_play = QtCore.QTimer()
         self._timer_play.setSingleShot(True)
         self._timer_play.timeout.connect(self._play)
 
+    def paintEvent(self, evt):
+        super(_ImageWidget, self).paintEvent(evt)
+        if not self._movie:
+            return
+
+        count = self._movie.frameCount()
+        current = self._movie.currentFrameNumber()
+        perc = float(current) / float(count)
+
+        rect = QtCore.QRectF(self.rect())
+        rect.setTop(rect.height() - 2)
+        rect.setWidth(rect.width() * perc)
+
+        painter = QtGui.QPainter(self)
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(QtGui.QColor(255, 255, 255))
+        painter.drawRect(rect)
+
+    def mouseMoveEvent(self, evt):
+        if not self._is_scrubbing:
+            return super(_ImageWidget, self).mouseMoveEvent(evt)
+
+        img_width = self._width
+        frame_count = self._movie.frameCount()
+
+        x = evt.pos().x()
+        if x < 0:
+            x = 0
+        if x > img_width:
+            x = img_width
+
+        frame_w = frame_count / float(img_width)
+        next_frame = int(frame_w * x)
+        self._movie.jumpToFrame(next_frame)
+
+    def mousePressEvent(self, evt):
+        if evt.button() == QtCore.Qt.RightButton:
+            return super(_ImageWidget, self).mousePressEvent(evt)
+
+        if not self._movie:
+            return
+
+        self._is_scrubbing = True
+        self._movie.setPaused(True)
+
     def mouseReleaseEvent(self, evt):
-        if evt.button() != QtCore.Qt.RightButton:
+        if evt.button() == QtCore.Qt.RightButton:
+            menu = QtWidgets.QMenu()
+            menu.addAction('Screen Grab', self.screen_grab)
+            menu.addAction('Select File', self.select_file)
+
+            _tmplt_menu = QtWidgets.QMenu('From Template')
+            for template in settings.templates:
+                _tmplt_menu.addAction(template, self.from_template)
+            menu.addMenu(_tmplt_menu)
+
+            menu.exec_(QtGui.QCursor().pos())
+
+            self.thumbnail_updated.emit()
+        else:
+            if self._movie:
+                self._is_scrubbing = False
+                self._movie.setPaused(False)
             return super(_ImageWidget, self).mouseReleaseEvent(evt)
-
-        menu = QtWidgets.QMenu()
-        menu.addAction('Screen Grab', self.screen_grab)
-        menu.addAction('Select File', self.select_file)
-
-        _tmplt_menu = QtWidgets.QMenu('From Template')
-        for template in settings.templates:
-            _tmplt_menu.addAction(template, self.from_template)
-        menu.addMenu(_tmplt_menu)
-
-        menu.exec_(QtGui.QCursor().pos())
-
-        self.thumbnail_updated.emit()
 
     def enterEvent(self, evt):
         self._timer_play.start(300)
@@ -291,6 +343,7 @@ class _ImageWidget(QtWidgets.QLabel):
 
     def set_image(self, img):
         self._img = img
+        self._is_playable = img.lower().endswith('.gif')
         self.setText('<img height=%d src="%s"/>' % (32, self._img))
 
     def update_width(self, width):
@@ -328,7 +381,7 @@ class _ImageWidget(QtWidgets.QLabel):
             self._asset_record.assign_thumbnail(thumbnail)
 
     def _play(self):
-        if not self._img.lower().endswith('.gif'):
+        if not self._is_playable:
             return
 
         if not os.path.isfile(self._img):
@@ -338,7 +391,9 @@ class _ImageWidget(QtWidgets.QLabel):
         buffer_gif = os.path.join(tmp, 'buffer.gif')
         shutil.copy(self._img, buffer_gif)
 
-        self._movie = QtGui.QMovie(buffer_gif)
+        self._movie = QtGui.QMovie(buffer_gif, parent=self)
+        self._movie.frameChanged.connect(lambda: self.update())
+        self._movie.setCacheMode(QtGui.QMovie.CacheAll)
         self._movie.setScaledSize(self.size())
         self.setMovie(self._movie)
         self._movie.start()
