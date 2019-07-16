@@ -1,4 +1,3 @@
-import glob
 import imp
 import os
 import threading
@@ -11,6 +10,7 @@ from ..data.entities.path import PathEntity
 from ..data.entities.tag import TagEntity
 from ..data.entities.tag_to_asset import TagToAssetEntity
 from ..data.query import Query
+from ..template import ParsingTemplate
 from ..ui.widgets.dialogs import ask
 
 
@@ -141,13 +141,7 @@ class AssetImporter(QtWidgets.QDialog):
         if AssetImporter.CACHED_PATH:
             self._edit_path.setText(AssetImporter.CACHED_PATH)
 
-        templates = glob.glob(settings.templates_folder + '\\*.py')
-        templates.sort()
-        templates = [os.path.basename(p) for p in templates]
-        if 'default.py' in templates:
-            templates.remove('default.py')
-            templates.insert(0, 'default.py')
-        self._cmbo_templates.addItems(templates)
+        self._cmbo_templates.addItems(settings.templates)
 
     def _browse_files(self):
         path = QtWidgets.QFileDialog.getExistingDirectory(self, 'Choose Root Folder')
@@ -209,26 +203,13 @@ def import_directory_tree(root_path, template, paths):
     if not paths:
         return False
 
-    module = imp.load_source('template', template) if template else None
+    _tmplt = ParsingTemplate(template)
 
     # Create assets
     for path in paths:
-        filename = os.path.basename(path)
-
-        # Get Asset Name
-        asset_name = os.path.splitext(filename)[0]
-        if module and hasattr(module, 'get_asset_name'):
-            asset_name = module.get_asset_name(path) or asset_name
-
-        # Get Tags
-        tags = ['new']
-        if module and hasattr(module, 'get_tags'):
-            tags = module.get_tags(path)
-
-        # Get Thumbnail
-        thumbnail = None
-        if module and hasattr(module, 'get_thumbnail'):
-            thumbnail = module.get_thumbnail(path)
+        asset_name = _tmplt.get_asset_name(path)
+        tags = _tmplt.get_tags(path)
+        thumbnail = _tmplt.get_thumbnail(path)
 
         path_rec = None
         created_tags = list()

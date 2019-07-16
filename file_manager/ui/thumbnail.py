@@ -1,6 +1,8 @@
 import os
 import re
+import shutil
 import subprocess
+import tempfile
 
 from Qt import QtCore, QtGui, QtWidgets
 from .widgets.dialogs import ask
@@ -10,6 +12,7 @@ from ..config import settings
 from ..data.connection import get_engine
 from ..data.entities import AssetEntity
 from ..data.query import Query
+from ..template import ParsingTemplate
 
 
 class FileManagerThumbnail(QtWidgets.QFrame):
@@ -50,7 +53,7 @@ class FileManagerThumbnail(QtWidgets.QFrame):
         self.path_records = path_records[:]
 
         self._lbl_title = QtWidgets.QLabel(asset_record.name.replace('_', ' '))
-        self._thumb = _ImageWidget(self.asset_record, '---')
+        self._thumb = _ImageWidget(self.asset_record, self.path_records, '---')
         self._lyt_tags = QtWidgets.QVBoxLayout()
         self._btn_tags = QtWidgets.QPushButton()
         self._btn_trash = QtWidgets.QPushButton()
@@ -244,10 +247,16 @@ class _AppButton(QtWidgets.QPushButton):
 class _ImageWidget(QtWidgets.QLabel):
     thumbnail_updated = QtCore.Signal()
 
-    def __init__(self, asset_record, *args, **kwargs):
+    def __init__(self, asset_record, path_records, *args, **kwargs):
+        """
+        Args:
+            asset_record (file_manager.data.entities.asset.AssetEntity:
+            path_records (list of file_manager.data.entities.path.PathEntity:
+        """
         super(_ImageWidget, self).__init__(*args, **kwargs)
 
         self._asset_record = asset_record
+        self._path_records = path_records
 
         self._movie = None
         self._width = 32
@@ -263,7 +272,15 @@ class _ImageWidget(QtWidgets.QLabel):
         menu = QtWidgets.QMenu()
         menu.addAction('Screen Grab', self.screen_grab)
         menu.addAction('Select File', self.select_file)
+
+        _tmplt_menu = QtWidgets.QMenu('From Template')
+        for template in settings.templates:
+            _tmplt_menu.addAction(template, self.from_template)
+        menu.addMenu(_tmplt_menu)
+
         menu.exec_(QtGui.QCursor().pos())
+
+        self.thumbnail_updated.emit()
 
     def enterEvent(self, evt):
         self._timer_play.start(300)
@@ -292,7 +309,6 @@ class _ImageWidget(QtWidgets.QLabel):
         thumb_file_path = os.path.join(thumb_path, filename)
         if grab_screen(thumb_file_path):
             self._asset_record.assign_thumbnail(thumb_file_path)
-            self.thumbnail_updated.emit()
 
     def select_file(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Image', filter='Images (*.png *.jpg *.gif)')
@@ -302,13 +318,27 @@ class _ImageWidget(QtWidgets.QLabel):
             return
 
         self._asset_record.assign_thumbnail(file_name)
-        self.thumbnail_updated.emit()
+
+    def from_template(self):
+        action = self.sender()
+        template_name = action.text()
+        _tmplt = ParsingTemplate(template_name)
+        thumbnail = _tmplt.get_thumbnail(self._path_records[0].filepath)
+        if thumbnail:
+            self._asset_record.assign_thumbnail(thumbnail)
 
     def _play(self):
         if not self._img.lower().endswith('.gif'):
             return
 
-        self._movie = QtGui.QMovie(self._img)
+        if not os.path.isfile(self._img):
+            return
+
+        tmp = tempfile.gettempdir()
+        buffer_gif = os.path.join(tmp, 'buffer.gif')
+        shutil.copy(self._img, buffer_gif)
+
+        self._movie = QtGui.QMovie(buffer_gif)
         self._movie.setScaledSize(self.size())
         self.setMovie(self._movie)
         self._movie.start()

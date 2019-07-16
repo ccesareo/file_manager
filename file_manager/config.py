@@ -1,4 +1,5 @@
 import ConfigParser
+import glob
 import logging
 import os
 from collections import defaultdict
@@ -39,8 +40,17 @@ class _Settings(object):
 
     @property
     def templates_folder(self):
-        print __file__, self.lib_dir
         return (os.path.dirname(self.lib_dir) or '.') + '\\templates'
+
+    @property
+    def templates(self):
+        templates = glob.glob(settings.templates_folder + '\\*.py')
+        templates.sort()
+        templates = [os.path.basename(p) for p in templates]
+        if 'default.py' in templates:
+            templates.remove('default.py')
+            templates.insert(0, 'default.py')
+        return templates
 
     @property
     def icons_folder(self):

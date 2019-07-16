@@ -9,7 +9,7 @@ import tempfile
 import maya.standalone
 
 try:
-    maya.standalone.initialize()
+    maya.standalone.initialize(name='python')
 except RuntimeError:
     pass
 
@@ -29,7 +29,7 @@ def convert_skeleton():
 
 
 def convert_joint(curr_joint, group_name, root_jnt=True):
-    scale_size = mc.jointDisplayScale(q=True) * 1.0
+    scale_size = mc.jointDisplayScale(q=True) * 2.0
 
     _children = mc.listRelatives(curr_joint, c=True)
     if _children is not None:
@@ -149,12 +149,27 @@ def main(input_name, output_name):
     cmds.setAttr('defaultRenderGlobals.startFrame', s)
     cmds.setAttr('defaultRenderGlobals.endFrame', e)
 
-    cmds.render(cam_name, x=320, y=240)
+    final_output = os.path.join(output_dir, output_prefix)
+    cmds.playblast(
+        forceOverwrite=True,
+        indexFromZero=True,
+        percent=100,
+        quality=100,
+        startTime=int(s),
+        endTime=int(e),
+        format='image',
+        filename=final_output,
+        viewer=0,
+        width=320,
+        height=240,
+    )
+    final_output += '.%04d.png'
 
-    final_output = os.path.join(output_dir, cam_name, output_prefix + '.%04d.png')
+    # print 'rendering'
+    # final_output = os.path.join(output_dir, cam_name, output_prefix + '.%04d.png')
+    # cmds.render(cam_name, x=320, y=240)
 
     # Convert preview to gif
-
     _args = [
         os.path.abspath(os.path.join(__file__, '..', 'ffmpeg.exe')),
         '-i', final_output,
@@ -171,3 +186,8 @@ def main(input_name, output_name):
 
 
 main(sys.argv[1], sys.argv[2])
+
+try:
+    maya.standalone.uninitialize(name='python')
+except RuntimeError:
+    pass
